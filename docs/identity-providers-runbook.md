@@ -1,6 +1,6 @@
 # TAMV ID — Identity providers and verified ORCID runbook
 
-**Scope:** Auth0 email signup/login, GitHub social connection, optional ORCID OIDC login, and direct ORCID linking for existing TAMV members.  
+**Scope:** Auth0 email signup/login, GitHub social connection through Auth0, ORCID-first registration handoff via direct ORCID OAuth, and authenticated ORCID linking for existing TAMV members.  
 **Status:** code paths are present; production operation depends on provider credentials, callback configuration, migration deployment and end-to-end tests.
 
 ## 1. Email signup and login
@@ -24,7 +24,7 @@ APP_BASE_URL must be the canonical HTTPS origin in production. Do not reuse anot
 
 If the connection name is blank, the page says GitHub is not configured; the app does not pretend the provider is active.
 
-## 3. ORCID: two separate options
+## 3. ORCID: initial registration or later linking
 
 ### Optional ORCID login through Auth0 OIDC
 
@@ -40,7 +40,7 @@ This requires a functioning upstream OIDC connection in Auth0 and AUTH0_ORCID_CO
 6. Test server-side code exchange, ORCID checksum validation, the canonical ORCID ID stored as verified and the absence of stored access tokens.
 7. Test cancellation, invalid state, session change, malformed IDs, duplicate verified IDs, provider outage and database errors.
 
-The direct linking flow requests the /authenticate scope to obtain the ORCID iD. It does not retrieve publications by default. A manually typed ORCID remains “declared”; only OAuth linking should change it to “verified”.
+The direct linking and ORCID-first flows request the `/authenticate` scope to obtain the ORCID iD. They do not retrieve publications by default. A manually typed ORCID remains “declared”; only successful server-side OAuth linking should change it to “verified”.
 
 Official guidance:
 - https://info.orcid.org/documentation/integration-guide/authorization/
@@ -64,6 +64,8 @@ Official guidance:
 - [ ] GitHub upstream connection is configured in Auth0 and callbacks are registered.
 - [ ] Optional Auth0/ORCID OIDC sign-in, if used, is tested independently.
 - [ ] Direct ORCID OAuth credentials and exact callback are registered.
+- [ ] Test ORCID-first onboarding: OAuth authentication, pending-cookie handoff, Auth0 signup/email verification, TAMV profile save, successful linking, cancellation and expiry.
+- [ ] Test ORCID linking from an existing authenticated profile and prevent duplicate-account/cross-member linking.
 - [ ] Migration 004 is applied and its function/index verified in Supabase.
 - [ ] Duplicate ORCID linking and cross-member linking are tested.
 - [ ] TAMV_REGISTRATION_ENABLED remains false until legal/data-controller gates are signed off.
