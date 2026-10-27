@@ -10,7 +10,7 @@ This service is a **research-discovery and provenance assistant**, not a journal
 
 The six initial capabilities are:
 
-1. Federated metadata discovery across OpenAlex, Crossref and DataCite, with a separate ROR organization lookup.
+1. Federated metadata discovery across OpenAlex, Crossref, DataCite, OpenAIRE Graph and PubMed/NCBI, with a separate ROR organization lookup.
 2. DOI cross-check across Crossref, DataCite and OpenAlex.
 3. Evidence-readiness and transfer-triage score with explicit weights and next actions.
 4. Prior-art discovery through EPO Open Patent Services when authorized credentials are configured, plus official manual search links.
@@ -20,7 +20,7 @@ The six initial capabilities are:
 ## Routes
 
 - `/auditoria`: institutional research, DOI, IP and API workspace.
-- `POST /api/research/search`: federated public metadata search.
+- `POST /api/research/search`: federated public metadata search across OpenAlex, Crossref, DataCite, OpenAIRE and PubMed, or ROR in organization mode.
 - `POST /api/research/audit`: DOI metadata comparison, evidence triage and digest; optional save to Supabase only when explicitly requested.
 - `POST /api/research/patents`: EPO OPS query when credentials exist; returns official fallback links for sources that are not automated.
 - `/investigacion`: public index of project/founder records and links.
@@ -34,16 +34,22 @@ All routes run on the server. Query bodies have explicit size limits and remote 
 | OpenAlex | [API reference](https://help.openalex.org/api/) — `GET /works?search=...` | Public metadata search is active. Results may include scholarly works, authors, sources, institutions and citations. Citation counts are not a universal quality metric. |
 | Crossref | [REST API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/) — `GET /works?query.bibliographic=...`, `GET /works/{doi}` | Active. Metadata is deposited by registrants; it does not imply peer review or validate underlying claims. A `mailto`/User-Agent is supplied when the contact environment variable is configured. |
 | DataCite | [REST API](https://support.datacite.org/docs/rest-api) — `GET /dois?query=...`, `GET /dois/{doi}` | Active. Public API does not require authentication and returns DOI records in Findable state; drafts and Registered-only records are not returned by the public endpoint. TAMV does not mint DOI in this code. |
+| OpenAIRE Graph | [Graph API v4](https://graph.openaire.eu/docs/apis/graph-api-v4/quickstart/) — `GET /graph/v4/research-products?search=...&page_size=...` | Active. Queries OpenAIRE's public research-product graph; this implementation asks for a maximum of 8 products per query. Public API rate limits and coverage apply; not an endorsement or peer-review guarantee. |
+| PubMed / NCBI | [NCBI E-utilities](https://www.ncbi.nlm.nih.gov/home/develop/api/) — `esearch.fcgi` + `esummary.fcgi` with `db=pubmed` | Active for metadata only. Public lookup works without an API key; optional `NCBI_API_KEY` can raise request allowance. The connector does not fetch article full text or make clinical claims. PMC reuse rights remain article-specific. |
 | ROR | [REST API](https://ror.readme.io/docs/rest-api) — `GET /v2/organizations?query=...` | Active for organization-name queries. Finding a ROR record does not determine whether TAMV is eligible for an ID. |
-| ORCID | [Public API](https://info.orcid.org/what-is-orcid/services/public-api/) | Link and schema guidance only in this release. API credentials, terms compliance, consent and identity-ownership verification must be completed before automatic queries are activated. A syntactically valid ORCID is not proof of control by the member. |
+| ORCID | [Public API](https://info.orcid.org/what-is-orcid/services/public-api/) | Link/reference only in this release. API credentials, terms compliance, consent and identity-ownership verification must be completed before automatic queries are activated. A syntactically valid ORCID is not proof of control by the member. |
 | OSF | [API v2 docs](https://developer.osf.io/) | Link/reference only in this release. OSF supports OAuth and token-based access; private project actions must be explicitly authorized. No OSF record is treated as an endorsement. |
 | EPO Open Patent Services | [EPO Developer Portal](https://developers.epo.org/) | Active only if `EPO_OPS_KEY` and `EPO_OPS_SECRET` are set server-side. OAuth client credentials; responses use patent XML. The current adapter extracts a small number of publication/title fields and is a discovery aid, not exhaustive family or legal-status analysis. Register an app and review EPO terms and quotas. |
 | USPTO Open Data Portal | [Getting started](https://data.uspto.gov/apis/getting-started) | Official link is exposed. A key is required. The current adapter does **not** execute a general patent search against USPTO, because the exact supported endpoint and query schema must be enabled and tested before being represented as active. |
 | WIPO PATENTSCOPE | [Terms of use](https://www.wipo.int/en/web/patentscope/data/terms_patentscope) | Manual link only. WIPO's published terms prohibit automated search queries and scraping. TAMV does not crawl PATENTSCOPE. |
 | Google Scholar | [Scholar search](https://scholar.google.com/) | Manual discovery link only. No automated scraping is used and Scholar results are not treated as curated peer-review validation. |
 | Scopus / Web of Science | [Elsevier APIs](https://dev.elsevier.com/), [Clarivate API portal](https://developer.clarivate.com/) | Not connected. Application registration, product entitlement, license/subscription and access conditions may apply. API keys alone do not imply entitlement. |
-| arXiv, IEEE Xplore, ACM DL, SpringerLink, ScienceDirect, PubMed/PMC, Nature, Science, NIST | Official portals | Link-only in this release unless a documented, permitted connector is added. Provider search coverage and editorial policies differ. |
-| Zenodo / Figshare / OpenAIRE / CERN | [Zenodo](https://zenodo.org/), [Figshare](https://figshare.com/), [OpenAIRE](https://www.openaire.eu/) | Curated resource links and research records. A DOI is not a peer-review seal; Zenodo's CERN/OpenAIRE infrastructure is not an endorsement of deposited work. DOI creation/update requires an authorized account, repository/provider permissions and correct metadata. |
+| Dimensions | [Analytics API](https://docs.dimensions.ai/dsl/api.html) | Not connected. API access generally requires an institutional subscription or explicit entitlement and key. Its documentation advises against using Analytics API to power derivative dashboards; TAMV must confirm licensing and intended use before any connector. |
+| arXiv, IEEE Xplore, ACM DL, SpringerLink, ScienceDirect, Nature Portfolio, Science | Official portals | Link-only in this release. Terms, APIs, licensing and coverage differ. No subscription access is bypassed. |
+| Zenodo / Figshare / CERN | [Zenodo](https://zenodo.org/), [Figshare](https://figshare.com/) | Curated repository links; write/deposit operations require explicit user/provider credentials and permissions. A DOI is not a peer-review seal; CERN infrastructure is not an endorsement of work deposited on Zenodo. |
+| NIST / Eclipse Foundation / WEF | [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework), [Eclipse Foundation](https://www.eclipse.org/), [WEF](https://www.weforum.org/) | Governance, standards, open-source foundation and strategy references. TAMV links them as methodological sources; no affiliation, certification or endorsement is claimed. |
+| Sourcegraph / LearnWorlds | [Sourcegraph API](https://sourcegraph.com/docs/api), [LearnWorlds API](https://support.learnworlds.com/support/solutions/articles/12000017230-learnworlds-api-documentation) | Not connected. Sourcegraph interfaces vary by deployment/version; LearnWorlds requires authorized tenant API access. They are prospective developer/learning integrations, not research evidence authorities. |
+| ISNI | [ISNI](https://isni.org/) | Link-only. External identifier must be matched to its source record; TAMV cannot claim to verify ownership merely from an input format or external link. |
 
 ## How a DOI audit works
 
