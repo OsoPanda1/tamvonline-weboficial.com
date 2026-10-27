@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent, type WheelEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent, type WheelEvent } from 'react';
 import {
   Activity, AlertTriangle, ArrowDownToLine, ArrowRight, Atom, CheckCircle2, CircleHelp,
   Compass, FileCheck2, GitBranch, Globe2, Layers3, LockKeyhole, Network, Orbit,
@@ -105,6 +105,7 @@ export default function HcuUniverse(){
  const [notice,setNotice]=useState('');
  const [helpOpen,setHelpOpen]=useState(false);
  const [loadingExport,setLoadingExport]=useState(false);
+ const [snapshotCheck,setSnapshotCheck]=useState<{status:'verified'|'mismatch'|'unavailable'|'invalid';message:string;fileName:string}|null>(null);
  const [evidenceLoading,setEvidenceLoading]=useState(false);
  const [evidenceResults,setEvidenceResults]=useState<HcuEvidenceResponse|null>(null);
  const [evidenceError,setEvidenceError]=useState('');
@@ -329,6 +330,45 @@ export default function HcuUniverse(){
    setNotice('No fue posible completar la exportación del snapshot. Vuelve a intentarlo.');
   }finally{setLoadingExport(false);}
  }
+ async function verifySnapshotFile(event:ChangeEvent<HTMLInputElement>){
+  const input=event.currentTarget;
+  const file=input.files?.[0];
+  input.value='';
+  if(!file)return;
+  if(file.size>2_000_000){
+   setSnapshotCheck({status:'invalid',fileName:file.name,message:'El archivo supera el límite local de 2 MB.'});
+   return;
+  }
+  try{
+   const parsed:unknown=JSON.parse(await file.text());
+   if(!parsed||typeof parsed!=='object'||!('snapshot' in parsed)||!('integrity' in parsed)){
+    setSnapshotCheck({status:'invalid',fileName:file.name,message:'El JSON no contiene la estructura de snapshot e integridad esperada.'});
+    return;
+   }
+   const envelope=parsed as {snapshot:unknown;integrity:{algorithm?:unknown;digestHex?:unknown;digestScope?:unknown}};
+   if(envelope.integrity?.algorithm!=='SHA-512'||typeof envelope.integrity.digestHex!=='string'||!/^[a-f0-9]{128}$/i.test(envelope.integrity.digestHex)){
+    setSnapshotCheck({status:'unavailable',fileName:file.name,message:'El archivo no contiene un resumen SHA-512 compatible. No se puede confirmar integridad con este verificador.'});
+    return;
+   }
+   if(!globalThis.crypto?.subtle){
+    setSnapshotCheck({status:'unavailable',fileName:file.name,message:'Web Crypto no está disponible en este contexto. Abre el sitio en HTTPS y vuelve a intentarlo.'});
+    return;
+   }
+   const canonicalJson=JSON.stringify(envelope.snapshot);
+   const digestBuffer=await globalThis.crypto.subtle.digest('SHA-512',new TextEncoder().encode(canonicalJson));
+   const actual=Array.from(new Uint8Array(digestBuffer),value=>value.toString(16).padStart(2,'0')).join('');
+   const verified=actual.toLowerCase()===envelope.integrity.digestHex.toLowerCase();
+   setSnapshotCheck({
+    status:verified?'verified':'mismatch',
+    fileName:file.name,
+    message:verified
+     ?'El resumen coincide con el contenido del snapshot. Esto solo detecta cambios respecto al digest incluido; no demuestra autoría, fecha de creación, veracidad, firma digital ni certificación.'
+     :'El resumen no coincide con el contenido actual. El archivo pudo cambiar, estar corrupto o usar otra regla de serialización.',
+   });
+  }catch{
+   setSnapshotCheck({status:'invalid',fileName:file.name,message:'No se pudo leer el JSON. Comprueba que el archivo no esté truncado o corrupto.'});
+  }
+ }
  const phase=selected?((selected.axes.uncertainty*180+year*7)%360):0;
  const quarantinedCount=quarantined.length;
  return <div className="hcu-universe-root">
@@ -404,6 +444,12 @@ export default function HcuUniverse(){
     <p>Alternativa navegable con teclado al lienzo 3D. Selecciona cualquier entidad para consultar su definición, estado y fuentes.</p>
     <div className="hcu-entity-browser-grid">{nodes.map(node=><button type="button" key={node.id} onClick={()=>selectNode(node)} className={node.id===selectedId?'active':''}><span>{node.type==='core'?'Ω':node.type==='domain'?'DOMINIO':node.type==='pod'?'POD':'ÁTOMO'}</span><strong>{node.label}</strong><small>{node.domainId?hcuDomains.find(domain=>domain.id===node.domainId)?.label||'Sin dominio':'Núcleo HCU'}</small></button>)}</div>
    </details>
+   <section className="hcu-snapshot-verifier" aria-labelledby="hcu-snapshot-verifier-title">
+    <div><p className="hcu-section-kicker">INTEGRITY CHECK / SNAPSHOT</p><h2 id="hcu-snapshot-verifier-title">Verificar el archivo exportado</h2><p>Recalcula localmente SHA-512 sobre el contenido JSON del snapshot y lo compara con el digest incluido. El archivo no sale del navegador.</p></div>
+    <label className="hcu-snapshot-file"><span>Seleccionar snapshot JSON</span><input type="file" accept=".json,application/json" onChange={verifySnapshotFile}/></label>
+    {snapshotCheck&&<div className={'hcu-snapshot-check hcu-snapshot-'+snapshotCheck.status} role="status" aria-live="polite"><strong>{snapshotCheck.status==='verified'?'INTEGRIDAD DEL CONTENIDO COINCIDE':snapshotCheck.status==='mismatch'?'DIGEST NO COINCIDE':snapshotCheck.status==='unavailable'?'VERIFICACIÓN NO DISPONIBLE':'ARCHIVO NO VÁLIDO'}</strong><span>{snapshotCheck.fileName}</span><p>{snapshotCheck.message}</p></div>}
+    <p className="hcu-snapshot-boundary">No se verifica una firma, un sello de tiempo confiable, un anclaje BookPI, una evaluación VETRA ni la verdad de los datos. El exportador usa SHA-512 disponible en Web Crypto; no declara SHA3-512.</p>
+   </section>
    <div className="hcu-lower-grid">
     <section className="hcu-lower-panel"><div className="hcu-section-kicker">RUNTIME VIEW / SIMULACIÓN LOCAL</div><div className="hcu-stat-list"><article><Layers3/><span>Átomos base<strong>{hcuAtomsCount}</strong></span></article><article><Activity/><span>Pods creados en esta sesión<strong>{podCount}</strong></span></article><article><ShieldAlert/><span>Entidades aisladas visualmente<strong>{quarantinedCount}</strong></span></article><article><Network/><span>Relaciones multidireccionales<strong>{hcuHyperedges.length}</strong></span></article></div><p>La capa runtime no está conectada a Kubernetes, modelos, memoria persistente ni telemetría de producción. Estos controles operan solo sobre el modelo local de la interfaz.</p></section>
     <section className="hcu-lower-panel"><div className="hcu-section-kicker">FUENTES Y CONECTORES A INTEGRAR</div><p className="hcu-source-intro">Infraestructura pública recomendada para convertir las preguntas del mapa en expedientes trazables. Su inclusión aquí no significa que cada entidad HCU ya consuma esas APIs.</p><div className="hcu-source-list">{hcuSources.map(source=><a key={source.name} href={source.url} target="_blank" rel="noopener noreferrer"><Globe2 aria-hidden="true"/><span><strong>{source.name}</strong><small>{source.purpose}</small></span><ArrowRight aria-hidden="true"/></a>)}</div></section>
