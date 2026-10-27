@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { ArrowRight, CheckCircle2, FileSearch, ShieldAlert } from 'lucide-react';
 
 export type ReviewQueueItem = {
@@ -31,7 +31,7 @@ const domains:Array<{key:string;label:string}>= [
 function linesToRefs(value:string):Array<{label:string;url:string}>{
  return value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(url=>{try{return {label:new URL(url).hostname,url};}catch{return {label:'Referencia inválida',url};}});
 }
-function Field({label,children}:{label:string;children:React.ReactNode}){
+function Field({label,children}:{label:string;children:ReactNode}){
  return <label className="vetra-review-field"><span>{label}</span>{children}</label>;
 }
 
@@ -55,7 +55,7 @@ function ReviewEditor({proposal,onSubmitted}:{proposal:ReviewQueueItem;onSubmitt
   setScores(current=>checked?{...current,[key]:current[key]??3}:Object.fromEntries(Object.entries(current).filter(([name])=>name!==key)));
  }
 
- async function submit(event:React.FormEvent<HTMLFormElement>){
+ async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();setError('');setSuccess('');
   if(!rationale.trim()||rationale.trim().length<100){setError('La justificación debe tener al menos 100 caracteres y referirse a evidencia concreta.');return;}
   const refs=linesToRefs(references);
