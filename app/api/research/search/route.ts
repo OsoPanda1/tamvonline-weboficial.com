@@ -31,7 +31,7 @@ function metadataResult(item: Partial<ResearchItem>): ResearchItem | null {
     authors: (item.authors || []).slice(0, 12).map((x) => cap(x, 120)),
     venue: item.venue ? cap(item.venue, 240) : null,
     resourceType: item.resourceType ? cap(item.resourceType, 100) : null,
-    citedByCount: Number.isFinite(item.citedByCount) ? item.citedByCount : null,
+    citedByCount: typeof item.citedByCount === "number" && Number.isFinite(item.citedByCount) ? item.citedByCount : null,
     license: item.license ? cap(item.license, 240) : null,
     openAccess: typeof item.openAccess === "boolean" ? item.openAccess : null,
     evidenceClass: item.evidenceClass || "Registro bibliográfico; el registro no certifica arbitraje ni calidad.",
@@ -51,7 +51,7 @@ async function searchOpenAlex(q: string): Promise<{ items: ResearchItem[]; state
     const location = row.primary_location as Record<string, unknown> | null;
     const source = location?.source as Record<string, unknown> | null;
     const access = row.open_access as Record<string, unknown> | null;
-    const authors = arr(row.authorships).map((a) => cap((a as Record<string, unknown>)?.author && ((a as Record<string, unknown>).author as Record<string, unknown>).display_name)).filter(Boolean);
+    const authors = arr(row.authorships).flatMap((value) => { const author = (value as Record<string, unknown>)?.author as Record<string, unknown> | undefined; const name = cap(author?.display_name, 120); return name ? [name] : []; });
     const doi = cap(row.doi).replace(/^https?:\/\/doi\.org\//i, "") || null;
     const normalized = metadataResult({
       id: cap(row.id), provider: "OpenAlex", title: cap(row.title, 600), url: doi ? `https://doi.org/${doi}` : safeExternalUrl(location?.landing_page_url, cap(row.id)),
