@@ -95,6 +95,21 @@ Before enabling:
 
 Official legal reference (Mexico): [Ley Federal de Protección de Datos Personales en Posesión de los Particulares — Cámara de Diputados](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFPDPPP.pdf). The legal pages are an operational starting point, not a certification of compliance or substitute for legal review.
 
+## VETRA Ω∞ proposal intake (migration 003)
+
+VETRA intake files: `app/vetra/page.tsx`, `app/vetra/propuesta-form.tsx`, `app/api/vetra/proposals/route.ts`, and migration `supabase/migrations/202610270003_vetra_proposals_reviews.sql`.
+
+Apply migration 003 only after reviewing the VETRA privacy notice and the three-gate proposal policy. It creates private proposal, review and decision tables; RLS is enabled and public/anon/authenticated table grants are revoked. The intake requires Auth0, a verified email, an existing TAMV ID, server-only Supabase credentials, and same-origin submission.
+
+Keep these environment flags false until the release criteria are met:
+- `TAMV_VETRA_SUBMISSIONS_ENABLED=false`
+- `TAMV_VETRA_RETENTION_POLICY_APPROVED=false`
+- `TAMV_VETRA_SCHEMA_VERIFIED=false`
+
+Set the flags to `true` only after (a) the migration succeeds in the correct Supabase project, (b) `supabase/tests/vetra_review_security_checks.sql` passes, (c) a documented retention and deletion policy has been approved and published, (d) the actual data-controller name/address/privacy contact have been checked, and (e) the VETRA committee, reviewer-conflict, appeal and decision process is operational. The environment flags are attestations; the app does not independently query the migration version or legally validate the policy. The form can export a local JSON draft while intake is closed.
+
+Receipt status is `received`, not approved or published. The current repository contains private review/decision tables but does not yet provide a reviewer administration interface, an appointed committee roster, automated plagiarism determination, peer review, or a certification system. VETRA scores are pilot thresholds and must be calibrated before consequential use. Membership payment must never change an academic decision.
+
 ## ROR readiness boundary
 
 TAMV ID is an internal member-identity record. It does not create a Research Organization Registry (ROR) entry, validate a legal entity, or by itself establish organizational eligibility. ROR's criteria must be reviewed independently, including the collective/stable nature of the entity and identifiable research outputs that acknowledge it accurately. Do not fabricate affiliations, collaborators or outputs to meet criteria.
