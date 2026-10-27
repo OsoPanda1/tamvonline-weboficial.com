@@ -261,3 +261,24 @@ export async function getRecentVetraProposalCount(tamvId: string, hours = 24): P
   );
   return Array.isArray(rows) ? rows.length : 0;
 }
+
+
+export type VetraProposalListItem = {
+  id: string;
+  proposal_code: string;
+  title: string;
+  proposal_type: string;
+  maturity_stage: string;
+  status: string;
+  risk_screening_status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function getVetraProposalsForMember(tamvId: string): Promise<VetraProposalListItem[]> {
+  if (!/^TAMV-[0-9A-F]{26}$/.test(tamvId)) throw new Error("Invalid TAMV member identifier.");
+  const rows = await supabaseFetch<VetraProposalListItem[]>(
+    `tamv_vetra_proposals?select=id,proposal_code,title,proposal_type,maturity_stage,status,risk_screening_status,created_at,updated_at&submitted_by_tamv_id=eq.${encodeURIComponent(tamvId)}&order=created_at.desc&limit=50`,
+  );
+  return Array.isArray(rows) ? rows : [];
+}
