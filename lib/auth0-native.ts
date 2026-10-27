@@ -188,7 +188,7 @@ export async function verifyAuth0IdToken(
 
   const now = Math.floor(Date.now() / 1000);
   const expectedIssuer = `https://${config.domain}/`;
-  const audiences = Array.isArray(claims.aud) ? claims.audiences ?? claims.aud : [claims.aud];
+  const audiences: Array<string | undefined> = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
   if (claims.iss !== expectedIssuer) throw new Error("Invalid identity token issuer.");
   if (!audiences.includes(config.clientId)) throw new Error("Invalid identity token audience.");
   if (audiences.length > 1 && claims.azp !== config.clientId) throw new Error("Invalid authorized party.");
