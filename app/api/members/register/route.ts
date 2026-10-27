@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { readSessionFromCookie, sameOriginRequest, sessionCookieName } from "@/lib/auth0-native";
-import { registerTamvMember, SupabaseConfigurationError } from "@/lib/supabase-rest";
+import { cookieOptions, openPayload, readSessionFromCookie, sameOriginRequest, sessionCookieName } from "@/lib/auth0-native";
+import { getIdentifiers, getMemberByAuth0Sub, getOrcidOwners, linkVerifiedOrcidIdentity, registerTamvMember, SupabaseConfigurationError } from "@/lib/supabase-rest";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const TERMS_VERSION = "1.0.0";
 const PRIVACY_VERSION = "1.0.0";
+type PendingOrcid = { orcid:string; createdAt:number; returnTo:string };
+const pendingOrcidCookieName = () => process.env.NODE_ENV === "production" ? "__Host-tamv_orcid_pending" : "tamv_orcid_pending";
 const ALLOWED_AREAS = new Set([
   "IA responsable", "Software abierto", "Ciencia abierta", "Memoria territorial",
   "Seguridad y privacidad", "Datos e interoperabilidad", "Diseño y experiencia",
@@ -101,12 +103,22 @@ export async function POST(request: Request) {
   if (rawAreas.length > 8) return NextResponse.json({ error: "Selecciona un máximo de ocho áreas." }, { status: 400 });
   const researchAreas = [...new Set(rawAreas.map((area) => text(area, 80)).filter((area) => ALLOWED_AREAS.has(area)))];
 
+  const pendingCookieValue = request.headers.get("cookie")?.split(";").map(item=>item.trim())
+    .find(item=>item.startsWith(pendingOrcidCookieName()+"="))
+    ?.slice(pendingOrcidCookieName().length+1);
+  const pendingRecord = openPayload<PendingOrcid>(pendingCookieValue);
+  const pendingOrcid = pendingRecord && Date.now()-pendingRecord.createdAt>=0 && Date.now()-pendingRecord.createdAt<=30*60*1000
+    ? validOrcid(pendingRecord.orcid) : null;
+
   const identifiers: Array<{ scheme: "ORCID" | "ISNI" | "GITHUB" | "WEBSITE"; value: string; normalized_value: string }> = [];
   const orcidInput = text(body.orcid, 200);
   if (orcidInput) {
     const normalized = validOrcid(orcidInput);
     if (!normalized) return NextResponse.json({ error: "El ORCID no tiene un formato o dígito de control válido." }, { status: 400 });
-    identifiers.push({ scheme: "ORCID", value: normalized, normalized_value: normalized.toLowerCase() });
+    if (pendingOrcid && normalized !== pendingOrcid) {
+      return NextResponse.json({ error: "El ORCID del formulario no coincide con el ORCID autenticado en este flujo. Actualiza la página y vuelve a intentarlo." }, { status: 409 });
+    }
+    if (!pendingOrcid) identifiers.push({ scheme: "ORCID", value: normalized, normalized_value: normalized.toLowerCase() });
   }
   const isniInput = text(body.isni, 200);
   if (isniInput) {
@@ -128,6 +140,21 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (pendingOrcid) {
+      const existing = await getMemberByAuth0Sub(session.sub);
+      const existingIdentifiers = existing ? await getIdentifiers(existing.tamv_id) : [];
+      const verifiedOrcid = existingIdentifiers.find(item=>item.scheme==="ORCID" && item.verification_status==="verified");
+      if (verifiedOrcid && verifiedOrcid.normalized_value.toLowerCase() !== pendingOrcid.toLowerCase()) {
+        return NextResponse.json({ error: "Tu ficha ya tiene otro ORCID verificado. No se ha modificado el perfil; inicia una solicitud de cambio de identificador por separado." }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      const owners = await getOrcidOwners(pendingOrcid);
+      if (existing && owners.some(owner=>owner.tamv_id!==existing.tamv_id && owner.verification_status==="verified")) {
+        return NextResponse.json({ error: "Este ORCID ya está verificado en otra ficha TAMV. No se modificó tu perfil." }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      if (!existing && owners.some(owner=>owner.verification_status==="verified")) {
+        return NextResponse.json({ error: "Este ORCID ya está verificado en otra ficha TAMV. Inicia sesión con la cuenta vinculada o contacta a la secretaría de identidad." }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+    }
     const result = await registerTamvMember({
       auth0Sub: session.sub,
       email: session.email,
@@ -140,7 +167,19 @@ export async function POST(request: Request) {
       privacyVersion: PRIVACY_VERSION,
       identifiers,
     });
-    return NextResponse.json({
+    let orcidLinked = true;
+    let orcidLinkMessage = "";
+    if (pendingOrcid) {
+      try {
+        await linkVerifiedOrcidIdentity(session.sub, pendingOrcid);
+        orcidLinkMessage = "ORCID autenticado y vinculado correctamente.";
+      } catch (error) {
+        orcidLinked = false;
+        orcidLinkMessage = "La ficha se guardó, pero ORCID aún no quedó vinculado. No se declara verificado; revisa si ya está asociado a otra cuenta y vuelve a intentar la vinculación desde Mi cuenta.";
+        if (error instanceof SupabaseConfigurationError) console.error("ORCID link unavailable after member upsert");
+      }
+    }
+    const response = NextResponse.json({
       ok: true,
       member: {
         tamvId: result.tamv_id,
@@ -150,7 +189,13 @@ export async function POST(request: Request) {
         createdAt: result.created_at,
         updatedAt: result.updated_at,
       },
+      orcidLinked,
+      orcidLinkMessage,
     }, { status: 200, headers: { "cache-control": "no-store, private" } });
+    if (pendingOrcid && orcidLinked) {
+      response.cookies.set(pendingOrcidCookieName(), "", { ...cookieOptions(0), expires: new Date(0) });
+    }
+    return response;
   } catch (error) {
     if (error instanceof SupabaseConfigurationError) return NextResponse.json({ error: "La base de datos no está completamente configurada en el entorno de servidor." }, { status: 503 });
     const status = typeof error === "object" && error !== null && "status" in error ? Number((error as { status: unknown }).status) : 500;
