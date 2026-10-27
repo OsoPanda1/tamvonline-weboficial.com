@@ -99,4 +99,31 @@ comment on table public.tamv_vetra_reviews is 'Private independent reviewer asse
 comment on table public.tamv_vetra_decisions is 'Append-only VETRA decision history; decision statements are human-authored and appealable.';
 comment on column public.tamv_vetra_proposals.filter_declarations is 'Submitter declarations for the three gates; declarations do not represent independent passage or certification.';
 
+
+-- Remove the direct member link and public display-name snapshot when a TAMV member is deleted.
+-- The editorial/audit retention policy must separately define lawful retention of the proposal body.
+create or replace function public.tamv_vetra_anonymize_on_member_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+begin
+  update public.tamv_vetra_proposals
+     set submitted_by_tamv_id = null,
+         submitter_display_name = 'Member withdrawn',
+         updated_at = now()
+   where submitted_by_tamv_id = old.tamv_id;
+  return old;
+end;
+$;
+
+revoke all on function public.tamv_vetra_anonymize_on_member_delete() from public, anon, authenticated;
+grant execute on function public.tamv_vetra_anonymize_on_member_delete() to service_role;
+
+drop trigger if exists tamv_vetra_member_delete_anonymize on public.tamv_members;
+create trigger tamv_vetra_member_delete_anonymize
+before delete on public.tamv_members
+for each row execute function public.tamv_vetra_anonymize_on_member_delete();
+
 commit;
