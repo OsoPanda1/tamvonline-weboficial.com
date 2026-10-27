@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { CheckCircle2 } from 'lucide-react';
 import { currentServerSession } from '@/lib/auth0-native';
@@ -10,7 +11,7 @@ export const metadata = { title: 'Mi cuenta TAMV', description: 'Gestión del pe
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ orcid?: string }> }) {
   const params = await searchParams;
   const session = await currentServerSession();
-  if (!session) return <main><header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><Link className="button button-ghost" href="/registro">Crear cuenta</Link></header><section className="form-shell"><div className="form-intro"><p className="eyebrow">ÁREA PERSONAL</p><h1>Accede a tu TAMV ID.</h1><p>Inicia sesión mediante Auth0 para consultar o actualizar tu ficha.</p><a className="button button-primary" href="/api/auth/login?returnTo=%2Fcuenta">Iniciar sesión</a></div></section></main>;
+  if (!session) return <main><SiteHeader active="/cuenta" /><section className="form-shell"><div className="form-intro"><p className="eyebrow">ÁREA PERSONAL</p><h1>Accede a tu TAMV ID.</h1><p>Inicia sesión mediante Auth0 para consultar o actualizar tu ficha.</p><a className="button button-primary" href="/api/auth/login?returnTo=%2Fcuenta">Iniciar sesión</a></div></section></main>;
 
   let member: Awaited<ReturnType<typeof getMemberByAuth0Sub>> = null;
   let identifiers: Awaited<ReturnType<typeof getIdentifiers>> = [];
@@ -25,7 +26,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
   return <main>
     <div className="utility-strip"><span>CUENTA DE MIEMBRO</span><span>IDENTIFICADOR PERSISTENTE TAMV</span></div>
-    <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/">Inicio</Link><Link href="/membresia">Membresía</Link><Link href="/comunidad">Comunidad</Link><Link href="/catalogo">Catálogo</Link><Link href="/hcu">HCU Ω∞</Link><Link href="/vetra">VETRA Ω</Link></nav><div className="header-actions"><a className="button button-small button-ghost" href="/api/auth/logout">Cerrar sesión</a></div></header>
+    <SiteHeader active="/cuenta" />
     <section className="form-shell"><div className="form-layout"><aside className="form-intro"><p className="eyebrow">MI ESPACIO TAMV</p><h1>Tu identidad. Tu decisión de compartir.</h1><p>La información de tu cuenta no se convierte en perfil público por iniciar sesión. La visibilidad se controla desde la ficha y requiere consentimiento expreso.</p><div className="role-note">Autenticación gestionada por Auth0. Registro de miembros y TAMV ID almacenados en Supabase.</div><div className="form-actions"><Link className="button button-ghost" href="/privacidad">Privacidad</Link><Link className="button button-ghost" href="/terminos">Términos</Link></div></aside>
     <div className="form-panel">
       <p className="eyebrow">PERFIL Y ESTADO</p>
