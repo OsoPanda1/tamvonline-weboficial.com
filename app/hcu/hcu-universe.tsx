@@ -289,18 +289,45 @@ export default function HcuUniverse(){
   setNodes(current=>[...current,node]);setSelectedId(node.id);setPodName('');setShowPodForm(false);
   setNotice(`Pod «${label}» creado localmente en el dominio ${domain.label}. No se desplegó ningún servicio.`);
  }
- function exportSnapshot(){
+ async function exportSnapshot(){
   setLoadingExport(true);
-  const payload={
-   schema:'tamv-hcu-snapshot-1.0',canonicalName:'TAMV Ω∞ HCU — Hyperdimensional Cognitive Universe',
-   createdAt:new Date().toISOString(),year,viewMode,selectedNode:selectedId,
-   disclaimer:'Modelo conceptual demostrativo. Los parámetros, ponderaciones y escenarios son ilustrativos, no evidencia empírica, predicción científica, certificación ni estado real de infraestructura.',
-   nodes:nodes.map(node=>({...node,quarantined:quarantined.includes(node.id)})),hyperedges:hcuHyperedges,domains:hcuDomains,
-   scenarioWeights,activeFilters:{query,showLabels,autoRotate},
-  };
-  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
-  const anchor=document.createElement('a');anchor.href=url;anchor.download='tamv-hcu-snapshot.json';anchor.click();URL.revokeObjectURL(url);
-  setLoadingExport(false);setNotice('Snapshot JSON generado desde el navegador. Contiene el modelo conceptual de esta sesión.');
+  try{
+   const snapshot={
+    schema:'tamv-hcu-snapshot-1.1',canonicalName:'TAMV Ω∞ HCU — Hyperdimensional Cognitive Universe',
+    createdAt:new Date().toISOString(),year,viewMode,selectedNode:selectedId,
+    disclaimer:'Modelo conceptual demostrativo. Los parámetros, ponderaciones y escenarios son ilustrativos, no evidencia empírica, predicción científica, certificación ni estado real de infraestructura.',
+    nodes:nodes.map(node=>({...node,quarantined:quarantined.includes(node.id)})),hyperedges:hcuHyperedges,domains:hcuDomains,
+    scenarioWeights,activeFilters:{query,showLabels,autoRotate},
+    integrityLimit:'El resumen SHA-512 detecta cambios en los bytes del JSON definido abajo. No prueba autoría, fecha legal, exactitud factual, revisión independiente ni certificación VETRA.',
+   };
+   const canonicalJson=JSON.stringify(snapshot);
+   let digest:string|null=null;
+   if(globalThis.crypto?.subtle){
+    const bytes=new TextEncoder().encode(canonicalJson);
+    const result=await globalThis.crypto.subtle.digest('SHA-512',bytes);
+    digest=Array.from(new Uint8Array(result),value=>value.toString(16).padStart(2,'0')).join('');
+   }
+   const exportEnvelope={
+    snapshot,
+    integrity:{
+     algorithm:digest?'SHA-512':'unavailable',
+     digestHex:digest,
+     digestScope:'SHA-512 over UTF-8 bytes of JSON.stringify(snapshot) before this integrity envelope was added.',
+     cryptographicSignature:false,
+     bookpiAnchor:false,
+     vetraCertification:false,
+     note:'This is a local integrity digest, not a digital signature, trusted timestamp, BookPI Root, SHA3-512 seal or certification.',
+    },
+   };
+   const output=JSON.stringify(exportEnvelope,null,2);
+   const blobUrl=URL.createObjectURL(new Blob([output],{type:'application/json'}));
+   const anchor=document.createElement('a');anchor.href=blobUrl;anchor.download='tamv-hcu-snapshot.json';anchor.click();
+   URL.revokeObjectURL(blobUrl);
+   setNotice(digest?'Snapshot exportado con resumen de integridad SHA-512 del contenido conceptual. No es firma ni certificación.':'Snapshot exportado sin resumen criptográfico: el contexto no dispone de Web Crypto.');
+  }catch(error){
+   console.error('HCU snapshot export failed');
+   setNotice('No fue posible completar la exportación del snapshot. Vuelve a intentarlo.');
+  }finally{setLoadingExport(false);}
  }
  const phase=selected?((selected.axes.uncertainty*180+year*7)%360):0;
  const quarantinedCount=quarantined.length;
