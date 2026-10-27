@@ -11,6 +11,13 @@ type Props = {
   callbackError?: string;
   githubConnectionAvailable: boolean;
   orcidConnectionAvailable: boolean;
+  orcidOAuthConfigured: boolean;
+  pendingOrcid: string;
+  initialProfile: {
+    displayName:string; bio:string; affiliation:string; countryCode:string; researchAreas:string[];
+    visibility:'private'|'public'; publicProfileConsent:boolean; termsVersion:string; privacyVersion:string;
+  } | null;
+  initialIdentifiers: Array<{scheme:'ORCID'|'ISNI'|'GITHUB'|'WEBSITE';value:string;verificationStatus:'declared'|'pending'|'verified'|'rejected'}>;
 };
 
 const areas = [
@@ -29,26 +36,28 @@ const authErrors: Record<string, string> = {
   token_exchange_failed: 'El proveedor de identidad no completó la autenticación.',
   missing_identity_token: 'No se recibió la prueba de identidad esperada.',
   authentication_failed: 'La autenticación no pudo verificarse. Intenta otra vez.',
+  orcid_signup_cancelled: 'Cancelaste el paso de ORCID. No se vinculó un identificador.',
+  orcid_unconfigured: 'El flujo ORCID de inscripción aún necesita credenciales públicas de OAuth configuradas.',
 };
 
-export default function RegistrationForm({ authenticated, name, email, emailVerified, callbackError, githubConnectionAvailable, orcidConnectionAvailable }: Props) {
-  const [displayName, setDisplayName] = useState(name || '');
-  const [bio, setBio] = useState('');
-  const [affiliation, setAffiliation] = useState('');
-  const [countryCode, setCountryCode] = useState('MX');
-  const [researchAreas, setResearchAreas] = useState<string[]>([]);
-  const [orcid, setOrcid] = useState('');
-  const [isni, setIsni] = useState('');
-  const [githubUrl, setGithubUrl] = useState('');
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [visibility, setVisibility] = useState<'private' | 'public'>('private');
-  const [publicProfileConsent, setPublicProfileConsent] = useState(false);
-  const [adultConfirmed, setAdultConfirmed] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+export default function RegistrationForm({ authenticated, name, email, emailVerified, callbackError, githubConnectionAvailable, orcidConnectionAvailable, orcidOAuthConfigured, pendingOrcid, initialProfile, initialIdentifiers }: Props) {
+  const [displayName, setDisplayName] = useState(initialProfile?.displayName || name || '');
+  const [bio, setBio] = useState(initialProfile?.bio || '');
+  const [affiliation, setAffiliation] = useState(initialProfile?.affiliation || '');
+  const [countryCode, setCountryCode] = useState(initialProfile?.countryCode || 'MX');
+  const [researchAreas, setResearchAreas] = useState<string[]>(initialProfile?.researchAreas || []);
+  const [orcid, setOrcid] = useState(pendingOrcid || initialIdentifiers.find(item=>item.scheme==='ORCID')?.value || '');
+  const [isni, setIsni] = useState(initialIdentifiers.find(item=>item.scheme==='ISNI')?.value || '');
+  const [githubUrl, setGithubUrl] = useState(initialIdentifiers.find(item=>item.scheme==='GITHUB')?.value || '');
+  const [websiteUrl, setWebsiteUrl] = useState(initialIdentifiers.find(item=>item.scheme==='WEBSITE')?.value || '');
+  const [visibility, setVisibility] = useState<'private' | 'public'>(initialProfile?.visibility || 'private');
+  const [publicProfileConsent, setPublicProfileConsent] = useState(initialProfile?.publicProfileConsent || false);
+  const [adultConfirmed, setAdultConfirmed] = useState(Boolean(initialProfile));
+  const [termsAccepted, setTermsAccepted] = useState(Boolean(initialProfile && initialProfile.termsVersion === '1.0.0'));
+  const [privacyAccepted, setPrivacyAccepted] = useState(Boolean(initialProfile && initialProfile.privacyVersion === '1.0.0'));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(callbackError ? authErrors[callbackError] || 'No se completó la autenticación.' : '');
-  const [result, setResult] = useState<{tamvId:string;displayName:string;membershipStatus:string;profileVisibility:string;createdAt:string;updatedAt:string}|null>(null);
+  const [result, setResult] = useState<{tamvId:string;displayName:string;membershipStatus:string;profileVisibility:string;createdAt:string;updatedAt:string;orcidLinked?:boolean;orcidLinkMessage?:string}|null>(null);
   const [copied, setCopied] = useState(false);
 
   function toggleArea(area: string) {
@@ -84,7 +93,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'No fue posible completar el registro.');
-      setResult(payload.member);
+      setResult({...payload.member, orcidLinked: payload.orcidLinked !== false, orcidLinkMessage: typeof payload.orcidLinkMessage === 'string' ? payload.orcidLinkMessage : ''});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No fue posible completar el registro.');
     } finally {
@@ -103,12 +112,13 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <h2>Identidad segura con Auth0</h2>
       <p className="subtext">TAMV no solicita una contraseña nueva dentro de este sitio. El inicio de sesión se realiza en el proveedor de identidad. Después podrás completar tu perfil y aceptar los términos correspondientes.</p>
       {error && <div className="form-alert error" role="alert">{error}</div>}
-      <div className="form-alert"><strong>Privacidad desde el diseño</strong><br />El formulario de perfil no se abre hasta establecer una sesión autenticada. El registro exige correo verificado y consentimiento explícito para cualquier perfil público.</div>
+      <div className="form-alert"><strong>Privacidad desde el diseño</strong><br />El perfil TAMV se crea solo después de validar la sesión y el correo. Un identificador ORCID autenticado no revela ni verifica por sí solo un correo electrónico; el proceso combina ORCID con una cuenta cuyo correo esté verificado.</div>
+      {pendingOrcid && <div className="orcid-state-success"><CheckCircle2 aria-hidden="true"/> ORCID autenticado: <strong>{pendingOrcid}</strong>. Ahora crea o inicia sesión con correo verificado; el identificador se vinculará al guardar tu TAMV ID.</div>}
       <div className="form-provider-actions">
         <a className="button button-primary" href="/api/auth/login?screen_hint=signup&returnTo=%2Fregistro"><Mail aria-hidden="true"/> Crear cuenta con correo <ArrowRight aria-hidden="true" /></a>
         <a className="button button-ghost" href="/api/auth/login?returnTo=%2Fregistro"><Mail aria-hidden="true"/> Entrar con correo</a>
         {githubConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=github&screen_hint=signup&returnTo=%2Fregistro"><Github aria-hidden="true"/> Continuar con GitHub</a> : <div className="provider-unavailable"><Github aria-hidden="true"/><span><strong>GitHub · pendiente de conexión</strong><small>Se activa al configurar AUTH0_GITHUB_CONNECTION y comprobar el callback.</small></span></div>}
-        {orcidConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=orcid&screen_hint=signup&returnTo=%2Fregistro"><Fingerprint aria-hidden="true"/> Continuar con ORCID</a> : <div className="provider-unavailable"><Fingerprint aria-hidden="true"/><span><strong>ORCID · conexión de inicio pendiente</strong><small>Puedes vincular tu ORCID verificado por OAuth después de crear la cuenta. La conexión OIDC de acceso se configura por separado.</small></span></div>}
+        {orcidOAuthConfigured ? <a className="button button-ghost" href="/api/orcid/connect?mode=signup&returnTo=%2Fregistro"><Fingerprint aria-hidden="true"/> Verificar ORCID para registrarme</a> : orcidConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=orcid&screen_hint=signup&returnTo=%2Fregistro"><Fingerprint aria-hidden="true"/> Continuar con ORCID</a> : <div className="provider-unavailable"><Fingerprint aria-hidden="true"/><span><strong>ORCID · pendiente de credenciales</strong><small>Configura ORCID_CLIENT_ID y ORCID_CLIENT_SECRET para autenticar tu iD. El correo se valida por separado.</small></span></div>}
       </div>
     </div>;
   }
@@ -119,6 +129,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="success-heading"><CheckCircle2 aria-hidden="true" /><span>REGISTRO GUARDADO</span></div>
       <h2>Tu identidad TAMV está asignada.</h2>
       <p className="subtext">Conserva tu TAMV ID para resolver tu ficha. Este identificador es interno a TAMV y no sustituye ORCID, ISNI ni DOI.</p>
+      {result.orcidLinkMessage && <div className={result.orcidLinked ? 'orcid-state-success' : 'form-alert'} role="status">{result.orcidLinkMessage}</div>}
       <div className="member-summary">
         <span className="eyebrow">TAMV IDENTIFIER · PERSISTENT RECORD</span>
         <code>{result.tamvId}</code>
@@ -139,7 +150,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="field"><label htmlFor="affiliation">Afiliación declarada</label><input id="affiliation" name="affiliation" maxLength={180} value={affiliation} onChange={(e)=>setAffiliation(e.target.value)} placeholder="Organización o independiente" /><span className="help">Se registra como declaración de la persona, no como aval validado.</span></div>
       <div className="field field-wide"><label htmlFor="bio">Biografía breve</label><textarea id="bio" name="bio" maxLength={600} value={bio} onChange={(e)=>setBio(e.target.value)} placeholder="Áreas de trabajo, intereses y contribuciones (máximo 600 caracteres)." /><span className="help">{bio.length}/600 caracteres.</span></div>
       <div className="field field-wide"><span className="field-label">Áreas de interés (máximo ocho)</span><div className="check-grid">{areas.map((area)=><label className="check-row" key={area}><input type="checkbox" checked={researchAreas.includes(area)} onChange={()=>toggleArea(area)} disabled={!researchAreas.includes(area)&&researchAreas.length>=8} /><span>{area}</span></label>)}</div></div>
-      <div className="field"><label htmlFor="orcid">ORCID (opcional)</label><input id="orcid" name="orcid" value={orcid} onChange={(e)=>setOrcid(e.target.value)} maxLength={200} placeholder="0000-0002-1825-0097" /><span className="help">El formato y checksum se validan, pero escribir un ORCID solo lo registra como declarado. Para marcarlo como verificado, usa la vinculación OAuth desde Mi cuenta.</span></div>
+      <div className="field"><label htmlFor="orcid">ORCID (opcional)</label><input id="orcid" name="orcid" value={orcid} onChange={(e)=>setOrcid(e.target.value)} maxLength={200} placeholder="0000-0002-1825-0097" readOnly={Boolean(pendingOrcid)} /><span className="help">{pendingOrcid ? "Este ORCID acaba de autenticarse por OAuth y se vinculará al guardar el registro junto con el correo verificado." : "El formato y checksum se validan, pero escribir un ORCID solo lo registra como declarado. Para marcarlo como verificado, usa la vinculación OAuth desde Mi cuenta."}</span></div>
       <div className="field"><label htmlFor="isni">ISNI (opcional)</label><input id="isni" name="isni" value={isni} onChange={(e)=>setIsni(e.target.value)} maxLength={200} placeholder="0000 0001 2281 955X" /><span className="help">Se registra como declarado hasta realizar una comprobación independiente.</span></div>
       <div className="field"><label htmlFor="githubUrl">Perfil GitHub (opcional)</label><input id="githubUrl" name="githubUrl" type="url" value={githubUrl} onChange={(e)=>setGithubUrl(e.target.value)} maxLength={500} placeholder="https://github.com/usuario" /></div>
       <div className="field"><label htmlFor="websiteUrl">Sitio personal (opcional)</label><input id="websiteUrl" name="websiteUrl" type="url" value={websiteUrl} onChange={(e)=>setWebsiteUrl(e.target.value)} maxLength={500} placeholder="https://ejemplo.org" /></div>
