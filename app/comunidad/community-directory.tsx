@@ -3,9 +3,13 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowUpRight, CheckCircle2, Fingerprint, Globe2, Search, Users, X } from 'lucide-react';
-import type { PublicMemberProfile } from '@/lib/supabase-rest';
+type CommunityProfile = {
+ tamv_id:string; display_name:string; bio:string|null; affiliation:string|null; country_code:string|null;
+ research_areas:string[]; created_at:string; updated_at:string;
+ identifiers:Array<{scheme:'ORCID'|'ISNI'|'GITHUB'|'WEBSITE';value:string;verification_status:'declared'|'pending'|'verified'|'rejected';verified_at:string|null}>;
+};
 
-function externalLink(identifier:PublicMemberProfile['identifiers'][number]):string|null{
+function externalLink(identifier:CommunityProfile['identifiers'][number]):string|null{
  if(identifier.scheme==='ORCID'&&/^https:\/\/orcid\.org\/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(identifier.value))return identifier.value;
  if(identifier.scheme==='GITHUB'&&/^https:\/\/github\.com\/[A-Za-z0-9-]+\/?$/.test(identifier.value))return identifier.value;
  if(identifier.scheme==='WEBSITE'&&identifier.value.startsWith('https://'))return identifier.value;
@@ -13,7 +17,7 @@ function externalLink(identifier:PublicMemberProfile['identifiers'][number]):str
  return null;
 }
 
-export default function CommunityDirectory({profiles,loadError=false}:{profiles:PublicMemberProfile[];loadError?:boolean}){
+export default function CommunityDirectory({profiles,loadError=false}:{profiles:CommunityProfile[];loadError?:boolean}){
  const [query,setQuery]=useState('');
  const [area,setArea]=useState('all');
  const [country,setCountry]=useState('all');
