@@ -12,5 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/contribuir`, lastModified: updated, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${base}/terminos`, lastModified: updated, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${base}/privacidad`, lastModified: updated, changeFrequency: 'yearly', priority: 0.4 },
+    { url: `${base}/auditoria`, lastModified: updated, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/investigacion`, lastModified: updated, changeFrequency: 'monthly', priority: 0.8 },
   ];
 }
