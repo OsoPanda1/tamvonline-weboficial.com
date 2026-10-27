@@ -427,3 +427,15 @@ export async function markVetraProposalInReview(proposalId:string):Promise<void>
     {method:"PATCH",headers:{prefer:"return=minimal"},body:JSON.stringify({status:"independent_review",updated_at:new Date().toISOString()})},
   );
 }
+
+
+export async function linkVerifiedOrcidIdentity(auth0Sub:string, orcidUrl:string):Promise<{tamv_id:string;orcid_url:string;verification_status:string;verified_at:string}>{
+  if(!auth0Sub||auth0Sub.length>255)throw new Error("Invalid authenticated identity.");
+  if(!/^https:\/\/orcid\.org\/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(orcidUrl))throw new Error("Invalid canonical ORCID URL.");
+  const rows=await supabaseFetch<Array<{tamv_id:string;orcid_url:string;verification_status:string;verified_at:string}>>(
+    "rpc/tamv_link_verified_orcid",
+    {method:"POST",body:JSON.stringify({p_auth0_sub:auth0Sub,p_orcid_url:orcidUrl})},
+  );
+  if(!Array.isArray(rows)||!rows[0]?.tamv_id||rows[0].verification_status!=="verified")throw new Error("Supabase did not confirm the ORCID link.");
+  return rows[0];
+}
