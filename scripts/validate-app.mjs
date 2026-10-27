@@ -12,6 +12,8 @@ const required = [
   "app/api/auth/login/route.ts",
   "app/api/auth/callback/route.ts",
   "app/api/auth/logout/route.ts",
+  "app/api/orcid/connect/route.ts",
+  "app/api/orcid/callback/route.ts",
   "app/api/members/register/route.ts",
   "app/api/members/me/route.ts",
   "app/api/members/[tamvId]/route.ts",
@@ -22,6 +24,9 @@ const required = [
   "app/privacidad/page.tsx",
   "app/terminos/page.tsx",
   "app/auditoria/page.tsx",
+  "app/hcu/page.tsx",
+  "app/hcu/hcu-universe.tsx",
+  "lib/hcu-model.ts",
   "app/investigacion/page.tsx",
   "app/vetra/page.tsx",
   "app/vetra/propuesta-form.tsx",
@@ -40,6 +45,7 @@ const required = [
   "lib/research-engine.ts",
   "supabase/migrations/202610270002_research_audit_snapshots.sql",
   "supabase/migrations/202610270003_vetra_proposals_reviews.sql",
+  "supabase/migrations/202610270004_orcid_verified_link.sql",
   "supabase/tests/vetra_review_security_checks.sql",
   "docs/research-audit-api-map.md",
   "docs/vetra-executive-brief.md",
@@ -53,6 +59,8 @@ const required = [
   "lib/supabase-rest.ts",
   "supabase/migrations/202610270001_tamv_identity_registry.sql",
   "docs/tamv-id-runbook.md",
+  "docs/identity-providers-runbook.md",
+  "docs/hcu-methodology.md",
   ".env.example",
   ".github/workflows/site-quality.yml",
 ];
@@ -65,6 +73,14 @@ async function source(path) {
 for (const path of required) await source(path);
 
 const auth = await source("lib/auth0-native.ts");
+const authLogin = await source("app/api/auth/login/route.ts");
+const registrationForm = await source("app/registro/registration-form.tsx");
+const hcuPage = await source("app/hcu/page.tsx");
+const hcuComponent = await source("app/hcu/hcu-universe.tsx");
+const hcuModel = await source("lib/hcu-model.ts");
+const orcidConnect = await source("app/api/orcid/connect/route.ts");
+const orcidCallback = await source("app/api/orcid/callback/route.ts");
+const orcidMigration = await source("supabase/migrations/202610270004_orcid_verified_link.sql");
 const register = await source("app/api/members/register/route.ts");
 const supabase = await source("lib/supabase-rest.ts");
 const migration = await source("supabase/migrations/202610270001_tamv_identity_registry.sql");
@@ -119,6 +135,18 @@ if (!vetraPage.includes("VETRA Ω∞") || !vetraPage.includes("submissionConfigu
 for (const term of ["TAMV_VETRA_REVIEW_CONSOLE_ENABLED", "TAMV_VETRA_REVIEWER_EMAILS", "hasConflict", "financialInterest", "involvedInDevelopment", "recentCollaboration", "saveVetraReview", "sameOriginRequest"]) { if (!vetraReviewRoute.includes(term)) failures.push("VETRA reviewer endpoint missing access/conflict control: " + term); }
 for (const term of ["TAMV_VETRA_DECISION_CONSOLE_ENABLED", "TAMV_VETRA_DECISION_EMAILS", "getVetraLatestReviewsForDecision", "criticalFailures", "accepted_with_conditions", "sameOriginRequest"]) { if (!vetraDecisionRoute.includes(term)) failures.push("VETRA decision endpoint missing control: " + term); }
 if (!vetraReviewerPage.includes("TAMV_VETRA_REVIEWER_EMAILS") || !vetraDecisionPage.includes("TAMV_VETRA_DECISION_EMAILS")) failures.push("VETRA privileged pages must enforce separate email allowlists.");
+for (const term of ["hcuDomains", "hcuAtoms", "hcuHyperedges", "futurePotential", "evidence-needed", "HCU-DEMO-1.0"]) { if (!hcuModel.includes(term)) failures.push("HCU model missing domain/entity/evidence marker: " + term); }
+for (const term of ["TAMV Ω∞ HCU", "TRANSFORMATION", "MODEL", "/api/research/search", "scenarioWeights", "hcu-live-evidence", "provider", "not a"]) { if (!hcuComponent.toLowerCase().includes(term.toLowerCase())) failures.push("HCU UI missing interactive/evidence boundary marker: " + term); }
+if (!hcuPage.includes("HcuUniverse") || !hcuPage.includes("/vetra")) failures.push("HCU public route missing interactive component or VETRA relationship.");
+for (const term of ["AUTH0_GITHUB_CONNECTION", "AUTH0_ORCID_CONNECTION", "code_challenge_method", "safeReturnTo", "nonce"]) { if (!authLogin.includes(term)) failures.push("Auth0 provider login missing connection/security marker: " + term); }
+for (const term of ["githubConnectionAvailable", "orcidConnectionAvailable", "provider-unavailable", "Crear cuenta con correo"]) { if (!registrationForm.includes(term)) failures.push("Registration UI missing provider configuration/availability marker: " + term); }
+for (const term of ["https://orcid.org/oauth/authorize", "/authenticate", "state", "AUTH0_SUBJECT"]) { if (!orcidConnect.includes(term)) failures.push("ORCID connect route missing OAuth security/scope marker: " + term); }
+for (const term of ["https://orcid.org/oauth/token", "canonicalOrcid", "linkVerifiedOrcidIdentity", "session.sub", "secureEquals"]) { if (!orcidCallback.includes(term)) failures.push("ORCID callback missing identity/state verification: " + term); }
+for (const term of ["tamv_link_verified_orcid", "verification_status='verified'", "revoke all on function", "auth.role()"]) { if (!orcidMigration.includes(term)) failures.push("ORCID migration missing server-only/verification control: " + term); }
+if (!envExample.includes("AUTH0_GITHUB_CONNECTION=") || !envExample.includes("AUTH0_ORCID_CONNECTION=") || !envExample.includes("ORCID_CLIENT_ID=") || !envExample.includes("ORCID_CLIENT_SECRET=")) failures.push("Provider environment variables must be documented.");
+if (!required.includes("app/hcu/page.tsx") || !required.includes("docs/identity-providers-runbook.md")) failures.push("HCU/provider documentation must be required in static checks.");
+if (!vercelText.includes("Content-Security-Policy")) warnings.push("Review the live CSP and browser console during production QA; static header configuration alone is not enough.");
+
 if (!envExample.includes("TAMV_VETRA_SUBMISSIONS_ENABLED=false") || !envExample.includes("TAMV_VETRA_RETENTION_POLICY_APPROVED=false") || !envExample.includes("TAMV_VETRA_SCHEMA_VERIFIED=false") || !envExample.includes("TAMV_VETRA_GOVERNANCE_APPROVED=false") || !envExample.includes("TAMV_VETRA_REVIEW_CONSOLE_ENABLED=false") || !envExample.includes("TAMV_VETRA_DECISION_CONSOLE_ENABLED=false")) failures.push("VETRA launch flags must default to false.");
 if (/NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE|SECRET)/i.test(supabase + register + envExample)) failures.push("A Supabase administrative key must never use a NEXT_PUBLIC_ variable.");
 if (!privacy.includes("TAMV_DATA_CONTROLLER_ADDRESS") || !register.includes("TAMV_PRIVACY_CONTACT_EMAIL")) failures.push("Privacy launch gate is missing controller/address/contact checks.");
