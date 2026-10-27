@@ -42,6 +42,24 @@ async function authorizedDecisionMaker(request:Request){
   return {session,member} as const;
 }
 
+export async function GET(request:Request){
+  if(!featureReady()) return NextResponse.json({error:"La consola de decisiones VETRA está deshabilitada hasta aprobar gobernanza, política de retención y seguridad de Supabase."},{status:503,headers:{"cache-control":"no-store"}});
+  try{
+    const auth=await authorizedDecisionMaker(request);
+    if("error" in auth) return auth.error;
+    const queue=await getVetraReviewQueue(40);
+    const items=await Promise.all(queue.map(async proposal=>({
+      proposal,
+      reviews:await getVetraLatestReviewsForDecision(proposal.id),
+    })));
+    return NextResponse.json({ok:true,items,note:"Vista exclusiva del responsable de decisión allowlisted. Las revisiones y sus justificaciones son confidenciales."},{headers:{"cache-control":"no-store, private"}});
+  }catch(error){
+    if(error instanceof SupabaseConfigurationError)return NextResponse.json({error:"Supabase no está configurado."},{status:503});
+    console.error("VETRA decision queue failed");
+    return NextResponse.json({error:"No fue posible cargar los expedientes para decisión."},{status:500,headers:{"cache-control":"no-store"}});
+  }
+}
+
 export async function POST(request:Request){
   if(!sameOriginRequest(request)) return NextResponse.json({error:"Origen de solicitud no permitido."},{status:403});
   if(!featureReady()) return NextResponse.json({error:"La decisión VETRA está deshabilitada hasta aprobar gobernanza, política de retención y seguridad de Supabase."},{status:503,headers:{"cache-control":"no-store"}});
