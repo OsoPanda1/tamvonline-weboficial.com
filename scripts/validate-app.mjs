@@ -106,7 +106,7 @@ for (const term of ["tamv_vetra_proposals", "tamv_vetra_reviews", "tamv_vetra_de
 for (const term of ["filter1IntegrityAndProvenance", "filter2MethodAndReproducibility", "filter3ResponsibleUseAndRights", "Descargar borrador JSON", "no se ha enviado al servidor"]) { if (!vetraForm.includes(term)) failures.push("VETRA client intake missing user-facing gate or draft behavior: " + term); }
 if (!vetraPage.includes("VETRA Ω∞") || !vetraPage.includes("submissionConfiguration")) failures.push("VETRA public page missing canonical title or submission status.");
 if (!envExample.includes("TAMV_VETRA_SUBMISSIONS_ENABLED=false") || !envExample.includes("TAMV_VETRA_RETENTION_POLICY_APPROVED=false") || !envExample.includes("TAMV_VETRA_SCHEMA_VERIFIED=false")) failures.push("VETRA launch flags must default to false.");
-if (!/NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE|SECRET)/i.test(supabase + register + envExample)) failures.push("A Supabase administrative key must never use a NEXT_PUBLIC_ variable.");
+if (/NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE|SECRET)/i.test(supabase + register + envExample)) failures.push("A Supabase administrative key must never use a NEXT_PUBLIC_ variable.");
 if (!privacy.includes("TAMV_DATA_CONTROLLER_ADDRESS") || !register.includes("TAMV_PRIVACY_CONTACT_EMAIL")) failures.push("Privacy launch gate is missing controller/address/contact checks.");
 if (!workflow.includes("pnpm validate:app") || !workflow.includes("pnpm typecheck") || !workflow.includes("pnpm build")) failures.push("GitHub Actions is missing one or more application quality gates.");
 const headers = vercel.headers?.flatMap((entry) => entry.headers || []) || [];
