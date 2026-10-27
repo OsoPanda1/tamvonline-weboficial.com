@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -21,7 +22,7 @@ const resources = [
 ];
 export default function ResourcesPage(){
  return <main><div className="utility-strip"><span>APRENDER · CONSTRUIR · DOCUMENTAR</span><span>RECURSOS EXTERNOS CURADOS</span></div>
- <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/">Inicio</Link><Link href="/catalogo">Catálogo</Link><Link href="/membresia">Membresía</Link><Link href="/vetra">VETRA Ω</Link><Link href="/hcu">HCU Ω∞</Link><Link href="/roadmap">Roadmap</Link><Link href="/contribuir">Colaborar</Link></nav></header>
+ <SiteHeader active="/recursos" />
  <section className="legal-page"><div className="legal-container"><p className="legal-kicker">RECURSOS ABIERTOS · RUTAS DE APRENDIZAJE</p><h1>Un mapa para aprender, construir y compartir conocimiento.</h1><p>Directorio curado de documentación técnica, comunidades, modelos y ciencia abierta. La inclusión de una plataforma no implica alianza, patrocinio, afiliación o respaldo mutuo.</p><div className="legal-notice">Confirma la licencia, los términos y las condiciones de uso de cada material en la fuente original. No todos los modelos abiertos permiten cualquier uso comercial ni toda publicación es revisada por pares.</div></div></section>
  <section className="section-wrap resources-grid">{resources.map(r=><article key={r.name} className="resource-tile"><span>{r.type}</span><h2>{r.name}</h2><p>{r.text}</p><a href={r.url} target="_blank" rel="noopener noreferrer">Abrir recurso original <ArrowUpRight aria-hidden="true"/></a></article>)}</section>
  <footer className="site-footer"><div className="section-wrap"><div className="footer-bottom"><span>TAMV Online Network · Recursos externos independientes</span><Link href="/politica-editorial">Política editorial</Link><Link href="/privacidad">Privacidad</Link></div></div></footer></main>
