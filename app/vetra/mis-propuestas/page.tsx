@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, CircleAlert, FileText, LockKeyhole } from 'lucide-react';
 import { currentServerSession } from '@/lib/auth0-native';
@@ -48,7 +49,7 @@ export default async function MyVetraProposalsPage() {
  }
  return <main className="site-shell">
    <div className="utility-strip"><span>ÁREA PRIVADA · VETRA Ω∞</span><span>EXPEDIENTES PERSONALES</span></div>
-   <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/vetra">Protocolo VETRA</Link><Link href="/roadmap">Roadmap</Link><Link href="/membresia">Membresía</Link></nav><div className="header-actions"><Link className="button button-small button-ghost" href="/cuenta">Mi cuenta</Link></div></header>
+   <SiteHeader active="/vetra" />
    <section className="legal-page"><div className="legal-container">
     <p className="legal-kicker">SEGUIMIENTO DE EXPEDIENTES</p><h1>Mis propuestas VETRA</h1>
     <p>Esta vista muestra únicamente el estado de las propuestas vinculadas a tu TAMV ID. No expone dictámenes confidenciales, identidad de revisores ni datos de otros miembros. La recepción de una propuesta no significa que haya sido revisada o aprobada.</p>
