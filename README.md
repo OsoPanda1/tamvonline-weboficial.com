@@ -36,6 +36,8 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - app/auditoria/page.tsx: federated research search, DOI audit, patent/IP panel, API map and Isabella triage display.
 - app/investigacion/page.tsx: public record index with explicit source-evidence boundaries.
 - app/hcu/page.tsx: public HCU transformation-universe page.
+- app/miembros/page.tsx: public directory of real approved profiles; shows an honest empty state when no public profiles exist.
+- app/miembros/member-directory.tsx: searchable/filterable directory of consented profiles and verified external links.
 - app/hcu/hcu-universe.tsx: interactive canvas, selected-node inspector, local simulation controls and metadata lookup via the existing research API.
 - lib/hcu-model.ts: six domains, initial entity seeds, hyperedge hypotheses and public research catalog links.
 - app/api/orcid/connect/route.ts and app/api/orcid/callback/route.ts: ORCID OAuth-first registration handoff and authenticated member linking; secrets remain server-side.

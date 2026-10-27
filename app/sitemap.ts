@@ -18,5 +18,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/vetra`, lastModified: updated, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${base}/roadmap`, lastModified: updated, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/hcu`, lastModified: updated, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${base}/miembros`, lastModified: updated, changeFrequency: 'weekly', priority: 0.8 },
   ];
 }

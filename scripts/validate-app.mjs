@@ -22,6 +22,8 @@ const required = [
   "app/api/members/me/route.ts",
   "app/api/members/[tamvId]/route.ts",
   "app/miembro/[tamvId]/page.tsx",
+  "app/miembros/page.tsx",
+  "app/miembros/member-directory.tsx",
   "app/catalogo/page.tsx",
   "app/recursos/page.tsx",
   "app/membresia/page.tsx",
@@ -82,6 +84,8 @@ const registrationForm = await source("app/registro/registration-form.tsx");
 const hcuPage = await source("app/hcu/page.tsx");
 const hcuComponent = await source("app/hcu/hcu-universe.tsx");
 const hcuModel = await source("lib/hcu-model.ts");
+const memberDirectory = await source("app/miembros/page.tsx");
+const memberDirectoryClient = await source("app/miembros/member-directory.tsx");
 const orcidConnect = await source("app/api/orcid/connect/route.ts");
 const orcidCallback = await source("app/api/orcid/callback/route.ts");
 const orcidPending = await source("app/api/orcid/pending/route.ts");
@@ -146,6 +150,10 @@ if (!vetraReviewerPage.includes("TAMV_VETRA_REVIEWER_EMAILS") || !vetraDecisionP
 for (const term of ["hcuDomains", "hcuAtoms", "hcuHyperedges", "futurePotential", "evidence-needed", "HCU-DEMO-1.0", "id:'ai'", "id:'economy'", "id:'governance'", "id:'climate'", "id:'health'", "id:'security'"]) { if (!hcuModel.includes(term)) failures.push("HCU model missing domain/entity/evidence marker: " + term); }
 for (const term of ["TAMV Ω∞ HCU", "TRANSFORMATION", "MODEL", "/api/research/search", "scenarioWeights", "hcu-live-evidence", "provider", "No es un pronóstico validado"]) { if (!hcuComponent.toLowerCase().includes(term.toLowerCase())) failures.push("HCU UI missing interactive/evidence boundary marker: " + term); }
 if (!hcuPage.includes("HcuUniverse") || !hcuPage.includes("/vetra")) failures.push("HCU public route missing interactive component or VETRA relationship.");
+for (const term of ["getPublicMembers", "MemberDirectory", "profiles.length"]) { if (!memberDirectory.includes(term)) failures.push("Public member directory missing data/empty-state marker: " + term); }
+for (const term of ["profile.research_areas", "profile.identifiers", "safeExternalUrl", "No hay resultados", "clearFilters"]) { if (!memberDirectoryClient.includes(term)) failures.push("Member directory missing discovery/privacy marker: " + term); }
+for (const term of ["membership_status=eq.approved", "profile_visibility=eq.public", "public_profile_consent=eq.true", "verification_status=eq.verified"]) { if (!supabase.includes(term)) failures.push("Public member lookup missing approval/consent/verified-identifier gate: " + term); }
+if (!required.includes("app/miembros/page.tsx") || !required.includes("app/miembros/member-directory.tsx")) failures.push("Member directory must be included in static checks.");
 for (const term of ["AUTH0_GITHUB_CONNECTION", "AUTH0_ORCID_CONNECTION", "code_challenge_method", "safeReturnTo", "nonce"]) { if (!authLogin.includes(term)) failures.push("Auth0 provider login missing connection/security marker: " + term); }
 for (const term of ["githubConnectionAvailable", "orcidConnectionAvailable", "orcidOAuthConfigured", "registrationEnabled", "pendingOrcid", "provider-unavailable", "Crear cuenta con correo"]) { if (!registrationForm.includes(term)) failures.push("Registration UI missing provider configuration/availability marker: " + term); }
 for (const term of ["https://orcid.org/oauth/authorize", "/authenticate", "state", "auth0Sub", "mode", "sealPayload", "cookieOptions"]) { if (!orcidConnect.includes(term)) failures.push("ORCID connect route missing OAuth security/scope marker: " + term); }
