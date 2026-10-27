@@ -126,9 +126,9 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
   if (result) {
     const statusLabel = result.membershipStatus === 'approved' ? 'Membresía aprobada' : result.membershipStatus === 'pending_review' ? 'Registro recibido · revisión pendiente' : 'Estado de membresía: ' + result.membershipStatus;
     return <div className="form-panel">
-      <div className="success-heading"><CheckCircle2 aria-hidden="true" /><span>REGISTRO GUARDADO</span></div>
-      <h2>Tu identidad TAMV está asignada.</h2>
-      <p className="subtext">Conserva tu TAMV ID para resolver tu ficha. Este identificador es interno a TAMV y no sustituye ORCID, ISNI ni DOI.</p>
+      <div className="success-heading"><CheckCircle2 aria-hidden="true" /><span>{initialProfile ? 'PERFIL ACTUALIZADO' : 'REGISTRO GUARDADO'}</span></div>
+      <h2>{initialProfile ? 'Tus cambios quedaron guardados.' : 'Tu identidad TAMV está asignada.'}</h2>
+      <p className="subtext">{initialProfile ? 'Tu TAMV ID se mantiene; los cambios actualizaron tu ficha existente.' : 'Conserva tu TAMV ID para resolver tu ficha. Este identificador es interno a TAMV y no sustituye ORCID, ISNI ni DOI.'}</p>
       {result.orcidLinkMessage && <div className={result.orcidLinked ? 'orcid-state-success' : 'form-alert'} role="status">{result.orcidLinkMessage}</div>}
       <div className="member-summary">
         <span className="eyebrow">TAMV IDENTIFIER · PERSISTENT RECORD</span>
