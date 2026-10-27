@@ -143,7 +143,7 @@ returns table(id uuid, proposal_id uuid, decision_status text, created_at timest
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_review_count integer;
   v_domain text;
@@ -248,7 +248,7 @@ begin
 
   return query select v_decision_id,p_proposal_id,p_decision_status,v_created_at;
 end;
-$;
+$$;
 
 revoke all on function public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text) from public, anon, authenticated;
 grant execute on function public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text) to service_role;
