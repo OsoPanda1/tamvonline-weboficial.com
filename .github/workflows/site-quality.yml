@@ -40,3 +40,11 @@ jobs:
         run: pnpm typecheck
       - name: Production build
         run: pnpm build
+      - name: Smoke-test production routes and VETRA access gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./node_modules/.bin/next start --hostname 127.0.0.1 --port 3210 > /tmp/tamv-next-start.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          SMOKE_BASE_URL=http://127.0.0.1:3210 pnpm smoke:routes
