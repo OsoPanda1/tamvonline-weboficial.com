@@ -179,3 +179,74 @@ export async function saveResearchAuditSnapshot(input: ResearchAuditSnapshotInpu
   if (!Array.isArray(rows) || !rows[0]?.id) throw new Error("Supabase did not return the saved audit record.");
   return rows[0];
 }
+
+
+export type VetraProposalSubmission = {
+  submittedByTamvId: string;
+  submitterDisplayName: string;
+  title: string;
+  proposalType: "research" | "software" | "ai_system" | "dataset" | "infrastructure" | "education" | "territorial_knowledge" | "other";
+  maturityStage: "concept" | "method" | "prototype" | "tested" | "deployed";
+  abstract: string;
+  problemStatement: string;
+  contributionClaim: string;
+  methodology: string;
+  reproducibilityPlan: string;
+  sourcesAndArtifacts: Array<{ label: string; url: string }>;
+  ethicsAndHarm: string;
+  privacyAndData: string;
+  securityPlan: string;
+  rightsAndIp: string;
+  sustainabilityPlan: string;
+  fundingAndConflicts: string;
+  filterDeclarations: {
+    filter1IntegrityAndProvenance: boolean;
+    filter2MethodAndReproducibility: boolean;
+    filter3ResponsibleUseAndRights: boolean;
+    understandsDeclarationsAreNotApproval: boolean;
+  };
+};
+
+export async function createVetraProposal(input: VetraProposalSubmission): Promise<{ id: string; proposal_code: string; status: string; created_at: string }> {
+  if (!/^TAMV-[0-9A-F]{26}$/.test(input.submittedByTamvId)) throw new Error("Invalid TAMV member identifier.");
+  if (!input.filterDeclarations.filter1IntegrityAndProvenance ||
+      !input.filterDeclarations.filter2MethodAndReproducibility ||
+      !input.filterDeclarations.filter3ResponsibleUseAndRights ||
+      !input.filterDeclarations.understandsDeclarationsAreNotApproval) {
+    throw new Error("VETRA gate declarations are incomplete.");
+  }
+  const rows = await supabaseFetch<Array<{ id: string; proposal_code: string; status: string; created_at: string }>>(
+    "tamv_vetra_proposals?select=id,proposal_code,status,created_at",
+    {
+      method: "POST",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({
+        submitted_by_tamv_id: input.submittedByTamvId,
+        submitter_display_name: input.submitterDisplayName,
+        title: input.title,
+        proposal_type: input.proposalType,
+        maturity_stage: input.maturityStage,
+        abstract: input.abstract,
+        problem_statement: input.problemStatement,
+        contribution_claim: input.contributionClaim,
+        methodology: input.methodology,
+        reproducibility_plan: input.reproducibilityPlan,
+        sources_and_artifacts: input.sourcesAndArtifacts,
+        ethics_and_harm: input.ethicsAndHarm,
+        privacy_and_data: input.privacyAndData,
+        security_plan: input.securityPlan,
+        rights_and_ip: input.rightsAndIp,
+        sustainability_plan: input.sustainabilityPlan,
+        funding_and_conflicts: input.fundingAndConflicts,
+        filter_declarations: input.filterDeclarations,
+        submitter_attested: true,
+        status: "received",
+        risk_screening_status: "pending",
+      }),
+    },
+  );
+  if (!Array.isArray(rows) || !rows[0]?.proposal_code) {
+    throw new Error("Supabase did not return the VETRA proposal reference.");
+  }
+  return rows[0];
+}
