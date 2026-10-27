@@ -110,7 +110,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "La persistencia está cerrada hasta aplicar la migración de auditorías y habilitar TAMV_RESEARCH_AUDIT_PERSISTENCE_ENABLED." }, { status: 503 });
       }
       await saveResearchAuditSnapshot({
-        tamvId: member.tamv_id, auditType: "doi_metadata", subject: doi, auditHash, snapshot: { version: "tamv-doi-audit-1.0.0", doi, retrievedAt, records, readiness },
+        tamvId: member.tamv_id, auditType: "doi_metadata", subject: doi, auditHash,
+        engineVersion: "tamv-doi-audit-1.0.0",
+        sourceStatus: records.map((record) => ({ provider: record.provider, status: record.status, rawStatus: record.rawStatus })),
+        snapshot: { version: "tamv-doi-audit-1.0.0", doi, retrievedAt, records, readiness },
       });
       persisted = { saved: true, message: "Instantánea guardada en Supabase y vinculada a tu TAMV ID." };
     } catch (error) {
