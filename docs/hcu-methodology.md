@@ -67,7 +67,18 @@ The current prototype has no persistent graph database or evidence ledger connec
 
 Do not claim active BookPI roots, SHA3-512 evidence seals, ISCIR Ω∞ certification, quantum entanglement, Kubernetes runtime status or cryptographic certification unless real implementations and independent tests exist.
 
-## 8. Recommended milestones
+## 8. Snapshot export and local integrity verification
+
+HCU can export a JSON snapshot containing the current illustrative nodes, hyperedges, selected entity, year control, view mode and scenario weights. The browser uses Web Crypto SHA-512 to calculate a digest over the UTF-8 bytes of `JSON.stringify(snapshot)` before adding the integrity envelope. The verifier reads a JSON file locally and recomputes the digest against the included value.
+
+Interpretation is deliberately narrow:
+- Matching digests mean only that the current snapshot payload matches the digest embedded in that file under the stated serialization rule.
+- A mismatch can indicate payload changes, truncation, corruption or a different serialization rule.
+- A plain digest is not a digital signature, does not bind an author's identity, does not provide a trusted timestamp, and does not prove that the claims in the graph are true.
+- This is SHA-512, not SHA3-512. It does not create a BookPI root, does not call a remote evidence ledger, and does not certify a snapshot under VETRA or ISCIR.
+- The snapshot is generated and verified locally; it is not persisted to a TAMV account or remote evidence system in this implementation.
+
+## 9. Recommended milestones
 
 1. Add a federated evidence search for each selected atom/hyperedge.
 2. Store claim-source relationships with retrievable versions and hashes.
