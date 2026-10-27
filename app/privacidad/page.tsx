@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +11,7 @@ export default function PrivacyPage() {
   const ready = Boolean(controllerName && controllerAddress && privacyEmail);
   return <main>
     <div className="utility-strip"><span>PRIVACIDAD Y DATOS PERSONALES</span><span>VERSIÓN 1.0.0 · 27 OCTUBRE 2026</span></div>
-    <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/membresia">Membresía</Link><Link href="/terminos">Términos</Link><Link href="/registro">Registro</Link></nav></header>
+    <SiteHeader active="/privacidad" />
     <section className="legal-page"><div className="legal-container">
       <p className="legal-kicker">AVISO DE PRIVACIDAD · REGISTRO TAMV ID</p><h1>Los datos personales deben tener propósito, límite y control.</h1>
       <div className={ready ? "legal-notice" : "legal-notice legal-notice-warning"}><strong>{ready ? "Datos del responsable configurados." : "Aviso de lanzamiento incompleto."}</strong><br />{ready ? "Los valores siguientes se obtienen de la configuración de producción; deben verificarse por el responsable antes de habilitar el registro." : "El registro permanece bloqueado hasta publicar y verificar la identidad, el domicilio y el canal de privacidad del responsable. No se debe abrir el alta solo por tener Auth0 y Supabase conectados."}</div>
