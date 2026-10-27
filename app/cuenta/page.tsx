@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CheckCircle2 } from 'lucide-react';
 import { currentServerSession } from '@/lib/auth0-native';
 import { getIdentifiers, getMemberByAuth0Sub, SupabaseConfigurationError } from '@/lib/supabase-rest';
 import AccountActions from './account-actions';
