@@ -21,6 +21,14 @@ const required = [
   "app/membresia/page.tsx",
   "app/privacidad/page.tsx",
   "app/terminos/page.tsx",
+  "app/auditoria/page.tsx",
+  "app/investigacion/page.tsx",
+  "app/api/research/search/route.ts",
+  "app/api/research/audit/route.ts",
+  "app/api/research/patents/route.ts",
+  "lib/research-engine.ts",
+  "supabase/migrations/202610270002_research_audit_snapshots.sql",
+  "docs/research-audit-api-map.md",
   "app/sitemap.ts",
   "app/robots.ts",
   "lib/auth0-native.ts",
@@ -42,6 +50,11 @@ const auth = await source("lib/auth0-native.ts");
 const register = await source("app/api/members/register/route.ts");
 const supabase = await source("lib/supabase-rest.ts");
 const migration = await source("supabase/migrations/202610270001_tamv_identity_registry.sql");
+const researchMigration = await source("supabase/migrations/202610270002_research_audit_snapshots.sql");
+const researchEngine = await source("lib/research-engine.ts");
+const researchSearch = await source("app/api/research/search/route.ts");
+const researchAudit = await source("app/api/research/audit/route.ts");
+const researchPatents = await source("app/api/research/patents/route.ts");
 const privacy = await source("app/privacidad/page.tsx");
 const workflow = await source(".github/workflows/site-quality.yml");
 const pkgText = await source("package.json");
@@ -68,6 +81,11 @@ for (const term of ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY", "rpc/tam
 for (const term of ["enable row level security", "revoke all on table", "tamv_register_member", "tamv_delete_member", "adult_confirmed", "pending_review", "withdrawn"]) {
   if (!migration.toLowerCase().includes(term.toLowerCase())) failures.push("SQL migration missing security/schema marker: " + term);
 }
+for (const term of ["tamv-research-audit-1.0.0", "tamv_evidence_transfer", "metadataCompleteness", "reproducibility", "rightsAndLicense", "externalReview", "intellectualProperty"]) { if (!researchEngine.includes(term)) failures.push("Evidence engine missing marker: " + term); }
+for (const term of ["api.openalex.org/works", "api.crossref.org/works", "api.datacite.org/dois", "api.ror.org/v2/organizations"]) { if (!researchSearch.includes(term)) failures.push("Research search connector missing: " + term); }
+for (const term of ["auditHash", "Crossref", "DataCite", "OpenAlex", "saveResearchAuditSnapshot"]) { if (!researchAudit.includes(term)) failures.push("DOI audit route missing: " + term); }
+for (const term of ["EPO_OPS_KEY", "EPO_OPS_SECRET", "link_only", "PATENTSCOPE"]) { if (!researchPatents.includes(term)) failures.push("IP audit route missing: " + term); }
+for (const term of ["enable row level security", "revoke all on table", "tamv_research_audits", "audit_hash", "evidence_snapshot"]) { if (!researchMigration.toLowerCase().includes(term.toLowerCase())) failures.push("Research audit migration missing marker: " + term); }
 if (/NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE|SECRET)/i.test(supabase + register + envExample)) failures.push("A Supabase administrative key must never use a NEXT_PUBLIC_ variable.");
 if (!privacy.includes("TAMV_DATA_CONTROLLER_ADDRESS") || !register.includes("TAMV_PRIVACY_CONTACT_EMAIL")) failures.push("Privacy launch gate is missing controller/address/contact checks.");
 if (!workflow.includes("pnpm validate:app") || !workflow.includes("pnpm typecheck") || !workflow.includes("pnpm build")) failures.push("GitHub Actions is missing one or more application quality gates.");
