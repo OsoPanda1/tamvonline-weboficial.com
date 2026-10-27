@@ -15,6 +15,16 @@ import {
 type ViewMode='topology'|'hyperedges'|'pods'|'risk'|'evidence';
 type Point={x:number;y:number;z:number;radius:number};
 type XY={x:number;y:number};
+type HcuResearchResult={
+ id:string;provider:string;title:string;url:string;doi:string|null;year:number|null;authors:string[];
+ venue:string|null;resourceType:string|null;citedByCount:number|null;license:string|null;
+ openAccess:boolean|null;evidenceClass:string;retrievedAt:string;
+};
+type HcuEvidenceResponse={
+ ok:boolean;query:string;retrievedAt:string;results:HcuResearchResult[];
+ providers:Array<{id:string;name:string;status:string;count:number;note?:string}>;
+ methodology:string;error?:string;
+};
 const domainColor=Object.fromEntries(hcuDomains.map(domain=>[domain.id,domain.color])) as Record<HcuDomainId,string>;
 const AXES:Array<{key:'influence'|'risk'|'evidence'|'uncertainty'|'futurePotential';label:string;short:string}>=[
  {key:'influence',label:'Influencia sistémica',short:'X'},
@@ -89,6 +99,9 @@ export default function HcuUniverse(){
  const [notice,setNotice]=useState('');
  const [helpOpen,setHelpOpen]=useState(false);
  const [loadingExport,setLoadingExport]=useState(false);
+ const [evidenceLoading,setEvidenceLoading]=useState(false);
+ const [evidenceResults,setEvidenceResults]=useState<HcuEvidenceResponse|null>(null);
+ const [evidenceError,setEvidenceError]=useState('');
 
  const selected=nodes.find(node=>node.id===selectedId)||nodes[0];
  const matchingNodes=useMemo(()=>{
@@ -100,6 +113,7 @@ export default function HcuUniverse(){
  const hcuAtomsCount=nodes.filter(node=>node.type==='atom').length;
  const podCount=nodes.filter(node=>node.type==='pod').length;
  const selectedColor=selected?.domainId?domainColor[selected.domainId]:'#c5e9ff';
+ useEffect(()=>{setEvidenceResults(null);setEvidenceError('');},[selectedId]);
 
  useEffect(()=>{
   const canvas=canvasRef.current,host=hostRef.current;
@@ -208,7 +222,23 @@ export default function HcuUniverse(){
   return ()=>{alive=false;cancelAnimationFrame(frame);observer.disconnect();};
  },[nodes,selectedId,viewMode,query,year,autoRotate,showLabels,quarantined]);
 
- function selectNode(node:HcuNode){setSelectedId(node.id);setNotice('');}
+ function selectNode(node:HcuNode){setSelectedId(node.id);setNotice('');setEvidenceResults(null);setEvidenceError('');}
+ async function searchEvidenceForSelected(){
+  if(!selected)return;
+  const searchQuery=(selected.label+' '+selected.description).replace(/\s+/g,' ').trim().slice(0,180);
+  setEvidenceLoading(true);setEvidenceError('');setEvidenceResults(null);
+  try{
+   const response=await fetch('/api/research/search',{
+    method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',cache:'no-store',
+    body:JSON.stringify({query:searchQuery,type:'research'}),
+   });
+   const payload=await response.json() as HcuEvidenceResponse;
+   if(!response.ok||!payload.ok)throw new Error(payload.error||'No fue posible recuperar metadatos de investigación.');
+   setEvidenceResults(payload);
+  }catch(error){
+   setEvidenceError(error instanceof Error?error.message:'La búsqueda de evidencia no pudo completarse.');
+  }finally{setEvidenceLoading(false);}
+ }
  function pointerDown(event:PointerEvent<HTMLCanvasElement>){
   dragRef.current={x:event.clientX,y:event.clientY,rotation:{...rotationRef.current},pointerId:event.pointerId};
   event.currentTarget.setPointerCapture(event.pointerId);setAutoRotate(false);
@@ -309,6 +339,21 @@ export default function HcuUniverse(){
      <p className="hcu-axis-disclaimer">Los valores son parámetros de una simulación visual. No proceden de sensores, estudios empíricos, evaluación externa o certificación ISCIR/VETRA.</p>
      <div className="hcu-inspector-divider"/>
      <div className="hcu-inspector-info"><span>ESTADO DE LA EVIDENCIA</span><p><FileCheck2 aria-hidden="true"/>{selected?.evidenceStatus||'Pendiente'}</p>{selected?.sources?.length?<ul>{selected.sources.map(source=><li key={source}>{source}</li>)}</ul>:<small>No hay fuentes específicas vinculadas a esta entidad.</small>}</div>
+     <div className="hcu-live-evidence">
+      <div className="hcu-inspector-info"><span>DESCUBRIMIENTO DE EVIDENCIA</span><p>Busca metadatos públicos relacionados con la entidad seleccionada. El resultado bibliográfico es una pista de investigación, no una validación de su contenido.</p></div>
+      <button type="button" className="hcu-button-secondary" onClick={searchEvidenceForSelected} disabled={evidenceLoading||!selected}>
+       <Search aria-hidden="true"/>{evidenceLoading?'Consultando catálogos…':'Buscar literatura relacionada'} <ArrowRight aria-hidden="true"/>
+      </button>
+      {evidenceError&&<div className="hcu-notice hcu-notice-error" role="alert"><AlertTriangle aria-hidden="true"/><p>{evidenceError}</p></div>}
+      {evidenceResults&&<div className="hcu-evidence-results">
+       <div className="hcu-evidence-results-head"><strong>{evidenceResults.results.length} registros candidatos</strong><small>Consulta: {evidenceResults.query}</small><small>Recuperado: {new Date(evidenceResults.retrievedAt).toLocaleString('es-MX')}</small></div>
+       <div className="hcu-evidence-providers">{evidenceResults.providers.map(provider=><span key={provider.id} className={'provider-'+provider.status}><b>{provider.name}</b><small>{provider.status} · {provider.count}</small></span>)}</div>
+       {evidenceResults.results.length===0?<p className="hcu-evidence-empty">No se encontraron registros en esta consulta. Reintenta con términos alternativos y revisa el estado de los proveedores.</p>:
+        evidenceResults.results.slice(0,6).map(result=><article key={result.id} className="hcu-evidence-result"><a href={result.url} target="_blank" rel="noopener noreferrer">{result.title} <ArrowRight aria-hidden="true"/></a><p>{result.authors.slice(0,4).join(', ')}{result.authors.length>4?' et al.':''}{result.year?' · '+result.year:''}{result.venue?' · '+result.venue:''}</p><small>{result.provider} · {result.evidenceClass}</small>{result.doi&&<span>DOI: {result.doi}</span>}</article>)
+       }
+       <p className="hcu-evidence-method">{evidenceResults.methodology}</p>
+      </div>}
+     </div>
      <div className="hcu-inspector-info"><span>RIESGO Y LIMITACIONES</span><p><ShieldAlert aria-hidden="true"/>{selected?.riskNotes||'Requiere análisis de riesgo por disciplina.'}</p></div>
      <div className="hcu-inspector-info"><span>HYPEREDGES CONECTADOS</span>
       {selected? hcuHyperedges.filter(edge=>edge.nodeIds.includes(selected.id)).map(edge=><button type="button" key={edge.id} className="hcu-edge-item" onClick={()=>setViewMode('hyperedges')}><span>{edge.relation}</span><strong>{edge.label}</strong><small>{edge.nodeIds.length} entidades · evidencia pendiente</small></button>):<small>Selecciona un átomo para ver sus relaciones.</small>}
