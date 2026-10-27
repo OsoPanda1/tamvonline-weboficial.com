@@ -53,6 +53,7 @@ export default async function VetraPage() {
    && Boolean(process.env.TAMV_DATA_CONTROLLER_NAME?.trim())
    && Boolean(process.env.TAMV_DATA_CONTROLLER_ADDRESS?.trim())
    && Boolean(process.env.TAMV_PRIVACY_CONTACT_EMAIL?.trim())
+   && process.env.TAMV_VETRA_RETENTION_POLICY_APPROVED === "true"
    && Boolean((process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)?.trim())
    && Boolean((process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)?.trim());
  return <main className="site-shell">
