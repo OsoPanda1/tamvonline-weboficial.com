@@ -447,3 +447,33 @@ export async function getOrcidOwners(orcidUrl: string): Promise<Array<{tamv_id:s
     `tamv_member_identifiers?select=tamv_id,verification_status&scheme=eq.ORCID&normalized_value=eq.${encodeURIComponent(orcidUrl.toLowerCase())}&limit=10`,
   );
 }
+
+
+export type PublicMemberProfile = {
+  tamv_id: string;
+  display_name: string;
+  bio: string | null;
+  affiliation: string | null;
+  country_code: string | null;
+  research_areas: string[];
+  created_at: string;
+  updated_at: string;
+  identifiers: Array<{scheme:"ORCID"|"ISNI"|"GITHUB"|"WEBSITE";value:string;verification_status:"declared"|"pending"|"verified"|"rejected";verified_at:string|null}>;
+};
+
+export async function getPublicMembers(limit = 100): Promise<PublicMemberProfile[]> {
+  const count = Math.min(100, Math.max(1, Math.floor(limit)));
+  const members = await supabaseFetch<Array<Omit<PublicMemberProfile,"identifiers">>>(
+    `tamv_members?select=tamv_id,display_name,bio,affiliation,country_code,research_areas,created_at,updated_at&membership_status=eq.approved&profile_visibility=eq.public&public_profile_consent=eq.true&order=display_name.asc&limit=${count}`,
+  );
+  if (!Array.isArray(members) || members.length === 0) return [];
+  const ids = members.map(member=>member.tamv_id).filter(id=>/^TAMV-[0-9A-F]{26}$/.test(id));
+  if (ids.length === 0) return [];
+  const identifierRows = await supabaseFetch<Array<{tamv_id:string;scheme:"ORCID"|"ISNI"|"GITHUB"|"WEBSITE";value:string;verification_status:"declared"|"pending"|"verified"|"rejected";verified_at:string|null}>>(
+    `tamv_member_identifiers?select=tamv_id,scheme,value,verification_status,verified_at&tamv_id=in.(${ids.join(",")})&verification_status=eq.verified&scheme=in.(ORCID,GITHUB,ISNI,WEBSITE)&limit=400`,
+  );
+  return members.map(member=>({
+    ...member,
+    identifiers:(identifierRows||[]).filter(identifier=>identifier.tamv_id===member.tamv_id),
+  }));
+}
