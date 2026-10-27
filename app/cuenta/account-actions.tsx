@@ -1,8 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { AlertTriangle, LogOut, Trash2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Fingerprint, LogOut, Trash2 } from 'lucide-react';
 
-export default function AccountActions() {
+type Props = { orcidLinkEnabled?: boolean; orcidVerified?: boolean };
+
+export default function AccountActions({ orcidLinkEnabled = false, orcidVerified = false }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [confirming, setConfirming] = useState(false);
@@ -23,6 +25,11 @@ export default function AccountActions() {
   }
 
   return <div className="account-actions">
+    <section className="orcid-account-link">
+      <h3><Fingerprint aria-hidden="true" /> Identidad de investigación · ORCID</h3>
+      <p>Vincula tu ORCID a través del flujo OAuth oficial. Se marcará como verificado únicamente después de que ORCID autentique el identificador; escribirlo manualmente no equivale a verificar su titularidad.</p>
+      {orcidVerified ? <div className="orcid-state-success"><CheckCircle2 aria-hidden="true"/> ORCID vinculado y verificado por OAuth.</div> : orcidLinkEnabled ? <a className="button button-primary" href="/api/orcid/connect?returnTo=%2Fcuenta"><Fingerprint aria-hidden="true"/> Vincular / verificar ORCID</a> : <div className="form-alert">La vinculación ORCID está preparada, pero requiere ORCID_CLIENT_ID, ORCID_CLIENT_SECRET y la URI de callback registrada en el portal de ORCID.</div>}
+    </section>
     <a className="button button-ghost" href="/api/auth/logout"><LogOut aria-hidden="true" /> Cerrar sesión</a>
     <div className="delete-account">
       <h3><AlertTriangle aria-hidden="true" /> Gestión y eliminación de la ficha</h3>
