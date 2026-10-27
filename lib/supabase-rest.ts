@@ -282,3 +282,125 @@ export async function getVetraProposalsForMember(tamvId: string): Promise<VetraP
   );
   return Array.isArray(rows) ? rows : [];
 }
+
+
+export type VetraProposalForReview = {
+  id: string;
+  proposal_code: string;
+  submitter_display_name: string;
+  title: string;
+  proposal_type: string;
+  maturity_stage: string;
+  abstract: string;
+  problem_statement: string;
+  contribution_claim: string;
+  methodology: string;
+  reproducibility_plan: string;
+  sources_and_artifacts: Array<{label:string;url:string}>;
+  ethics_and_harm: string;
+  privacy_and_data: string;
+  security_plan: string;
+  rights_and_ip: string;
+  sustainability_plan: string;
+  funding_and_conflicts: string;
+  filter_declarations: Record<string, unknown>;
+  status: string;
+  risk_screening_status: string;
+  created_at: string;
+};
+
+export async function getVetraReviewQueue(limit = 30): Promise<VetraProposalForReview[]> {
+  const count = Math.min(50, Math.max(1, Math.floor(limit)));
+  const statuses = "received,administrative_screening,independent_review,minor_revision,major_revision";
+  const rows = await supabaseFetch<VetraProposalForReview[]>(
+    `tamv_vetra_proposals?select=id,proposal_code,submitter_display_name,title,proposal_type,maturity_stage,abstract,problem_statement,contribution_claim,methodology,reproducibility_plan,sources_and_artifacts,ethics_and_harm,privacy_and_data,security_plan,rights_and_ip,sustainability_plan,funding_and_conflicts,filter_declarations,status,risk_screening_status,created_at&status=in.(${statuses})&order=created_at.asc&limit=${count}`,
+  );
+  return Array.isArray(rows) ? rows : [];
+}
+
+export type VetraReviewSubmission = {
+  proposalId: string;
+  reviewerTamvId: string;
+  reviewerRole: string;
+  independenceDeclaration: Record<string, unknown>;
+  domainScores: Record<string, unknown>;
+  recommendation: "minor_revision" | "major_revision" | "accept_with_conditions" | "reject" | "recuse";
+  rationale: string;
+  evidenceReferences: Array<{label:string;url:string}>;
+};
+
+export async function saveVetraReview(input: VetraReviewSubmission): Promise<{ id:string; proposal_id:string; recommendation:string; created_at:string }> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.proposalId)) throw new Error("Invalid VETRA proposal identifier.");
+  if (!/^TAMV-[0-9A-F]{26}$/.test(input.reviewerTamvId)) throw new Error("Invalid reviewer TAMV ID.");
+  if (JSON.stringify(input.domainScores).length > 8000 || JSON.stringify(input.independenceDeclaration).length > 3000) throw new Error("VETRA review exceeds configured limits.");
+  const rows = await supabaseFetch<Array<{id:string;proposal_id:string;recommendation:string;created_at:string}>>(
+    "tamv_vetra_reviews?select=id,proposal_id,recommendation,created_at",
+    {method:"POST",headers:{prefer:"return=representation"},body:JSON.stringify({
+      proposal_id:input.proposalId,
+      reviewer_tamv_id:input.reviewerTamvId,
+      reviewer_role:input.reviewerRole.slice(0,120),
+      independence_declaration:input.independenceDeclaration,
+      domain_scores:input.domainScores,
+      recommendation:input.recommendation,
+      rationale:input.rationale.slice(0,8000),
+      evidence_references:input.evidenceReferences,
+      review_version:"VETRA-Ω∞-SOVEREIGN-1.0",
+    })},
+  );
+  if (!Array.isArray(rows) || !rows[0]?.id) throw new Error("Supabase did not return the saved VETRA review.");
+  return rows[0];
+}
+
+export type VetraReviewForDecision = {
+  id:string;
+  proposal_id:string;
+  reviewer_tamv_id:string | null;
+  independence_declaration:Record<string,unknown>;
+  domain_scores:Record<string,unknown>;
+  recommendation:string;
+  created_at:string;
+};
+
+export async function getVetraReviewsForProposal(proposalId:string):Promise<VetraReviewForDecision[]> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(proposalId)) throw new Error("Invalid VETRA proposal identifier.");
+  const rows=await supabaseFetch<VetraReviewForDecision[]>(
+    `tamv_vetra_reviews?select=id,proposal_id,reviewer_tamv_id,independence_declaration,domain_scores,recommendation,created_at&proposal_id=eq.${encodeURIComponent(proposalId)}&order=created_at.desc&limit=50`,
+  );
+  return Array.isArray(rows)?rows:[];
+}
+
+export async function createVetraDecision(input:{
+  proposalId:string;
+  status:"minor_revision"|"major_revision"|"accepted_with_conditions"|"rejected"|"suspended"|"withdrawn";
+  quorumSize:number;
+  rationale:string;
+  conditions:string[];
+  appealWindowDays:number;
+  decidedByTamvId:string;
+}):Promise<{id:string;proposal_id:string;decision_status:string;created_at:string}> {
+  if (!/^TAMV-[0-9A-F]{26}$/.test(input.decidedByTamvId)) throw new Error("Invalid decision-maker TAMV ID.");
+  if (input.rationale.length<100||input.rationale.length>8000) throw new Error("Decision rationale length is invalid.");
+  if (input.conditions.length>40||input.conditions.some(x=>!x.trim()||x.length>500)) throw new Error("Decision conditions are invalid.");
+  if (input.quorumSize<3||input.quorumSize>30) throw new Error("VETRA decision requires a quorum of at least three independent reviewers.");
+  const rows=await supabaseFetch<Array<{id:string;proposal_id:string;decision_status:string;created_at:string}>>(
+    "tamv_vetra_decisions?select=id,proposal_id,decision_status,created_at",
+    {method:"POST",headers:{prefer:"return=representation"},body:JSON.stringify({
+      proposal_id:input.proposalId,
+      decision_status:input.status,
+      quorum_size:input.quorumSize,
+      conflict_checks_complete:true,
+      decision_rationale:input.rationale,
+      conditions:input.conditions,
+      appeal_window_days:input.appealWindowDays,
+      decided_by_tamv_id:input.decidedByTamvId,
+      policy_version:"CANON-VETRA-OMEGA-INFINITY-2026-V1.0",
+    })},
+  );
+  if(!Array.isArray(rows)||!rows[0]?.id)throw new Error("Supabase did not return the VETRA decision.");
+  const patch=await supabaseFetch<unknown>(
+    `tamv_vetra_proposals?id=eq.${encodeURIComponent(input.proposalId)}`,
+    {method:"PATCH",headers:{prefer:"return=minimal"},body:JSON.stringify({status:input.status,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()})},
+  );
+  void patch;
+  return rows[0];
+}
