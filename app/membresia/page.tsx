@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, FileCode2, Fingerprint, Globe2, Network, ShieldCheck, Users } from 'lucide-react';
 
@@ -15,7 +16,7 @@ const benefits = [
 export default function MembershipPage() {
   return <main>
     <div className="utility-strip"><span>TAMV ONLINE NETWORK · MARCO DE PARTICIPACIÓN</span><span>TRANSPARENCIA · ATRIBUCIÓN · COLABORACIÓN</span></div>
-    <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/">Institución</Link><Link href="/catalogo">Catálogo</Link><Link href="/privacidad">Privacidad</Link></nav><div className="header-actions"><Link href="/registro" className="button button-small button-primary">Solicitar TAMV ID <ArrowRight aria-hidden="true" /></Link></div></header>
+    <SiteHeader active="/membresia" />
     <section className="legal-page"><div className="legal-container">
       <p className="legal-kicker">01 / MEMBRESÍA Y VALOR</p><h1>Unirse para construir con autoría, método y continuidad.</h1>
       <p>La participación en TAMV Online Network está pensada para personas que deseen hacer su trabajo más descubrible, documentar sus contribuciones y colaborar bajo principios transparentes. La red es una iniciativa independiente en desarrollo; la membresía no representa por sí sola una relación laboral, académica, gubernamental o de representación jurídica.</p>
