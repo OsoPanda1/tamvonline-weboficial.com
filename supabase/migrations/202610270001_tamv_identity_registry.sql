@@ -19,6 +19,7 @@ create table if not exists public.tamv_members (
   auth0_sub text not null unique check (length(auth0_sub) between 1 and 255),
   email text not null check (length(email) between 3 and 320),
   email_verified boolean not null default false,
+  adult_confirmed boolean not null default false,
   display_name text not null check (length(btrim(display_name)) between 2 and 100),
   bio text check (bio is null or length(bio) <= 600),
   affiliation text check (affiliation is null or length(affiliation) <= 180),
@@ -120,6 +121,7 @@ create or replace function public.tamv_register_member(
   p_auth0_sub text,
   p_email text,
   p_email_verified boolean,
+  p_adult_confirmed boolean,
   p_display_name text,
   p_bio text,
   p_affiliation text,
@@ -159,6 +161,9 @@ begin
   if p_email is null or length(p_email) not between 3 and 320 or p_email_verified is distinct from true then
     raise exception 'A verified email address is required';
   end if;
+  if p_adult_confirmed is distinct from true then
+    raise exception 'The initial TAMV membership flow requires an adult age confirmation';
+  end if;
   if p_display_name is null or length(btrim(p_display_name)) not between 2 and 100 then
     raise exception 'Display name must contain 2 to 100 characters';
   end if;
@@ -187,18 +192,18 @@ begin
 
   if v_tamv_id is null then
     insert into public.tamv_members (
-      auth0_sub, email, email_verified, display_name, bio, affiliation, country_code,
+      auth0_sub, email, email_verified, adult_confirmed, display_name, bio, affiliation, country_code,
       research_areas, profile_visibility, public_profile_consent,
       terms_version, terms_accepted_at, privacy_version, privacy_accepted_at
     ) values (
-      p_auth0_sub, lower(p_email), true, btrim(p_display_name), nullif(btrim(p_bio), ''),
+      p_auth0_sub, lower(p_email), true, true, btrim(p_display_name), nullif(btrim(p_bio), ''),
       nullif(btrim(p_affiliation), ''), nullif(upper(btrim(p_country_code)), ''),
       coalesce(p_research_areas, '{}'), p_profile_visibility, p_public_profile_consent,
       p_terms_version, now(), p_privacy_version, now()
     ) returning public.tamv_members.tamv_id into v_tamv_id;
   else
     update public.tamv_members as m set
-      email = lower(p_email), email_verified = true, display_name = btrim(p_display_name),
+      email = lower(p_email), email_verified = true, adult_confirmed = true, display_name = btrim(p_display_name),
       bio = nullif(btrim(p_bio), ''), affiliation = nullif(btrim(p_affiliation), ''),
       country_code = nullif(upper(btrim(p_country_code)), ''),
       research_areas = coalesce(p_research_areas, '{}'),
@@ -274,7 +279,7 @@ grant select, insert, update, delete on table public.tamv_id_registry to service
 grant select, insert, update, delete on table public.tamv_members to service_role;
 grant select, insert, update, delete on table public.tamv_member_identifiers to service_role;
 
-revoke all on function public.tamv_register_member(text,text,boolean,text,text,text,text,text[],text,boolean,text,text,jsonb) from public, anon, authenticated;
+revoke all on function public.tamv_register_member(text,text,boolean,boolean,text,text,text,text,text[],text,boolean,text,text,jsonb) from public, anon, authenticated;
 grant execute on function public.tamv_register_member(text,text,boolean,text,text,text,text,text[],text,boolean,text,text,jsonb) to service_role;
 revoke all on function public.tamv_delete_member(text) from public, anon, authenticated;
 grant execute on function public.tamv_delete_member(text) to service_role;
