@@ -1,162 +1,61 @@
 import {
   ArrowUpRight,
   BookOpen,
-  ChevronRight,
-  CircleCheck,
+  ChevronDown,
   ExternalLink,
-  Fingerprint,
+  FileText,
   Globe2,
-  Landmark,
-  Mail,
   Menu,
   Network,
+  Search,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react'
 
 const logos = {
   tamv: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/TAMVONLINE-OFICIAL-Id1lguzYc8qoEFd5VTU26wdHKq3Rj2.jpg',
   isabella: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-isav6-Nl0ITHeMEyZ7OKDsu4Y5tDqz0xQ64G.jpeg',
-  science:
-    'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Open%20Science%20Latinoam%C3%A9rica_%20Emblema%20del%20conocimiento%20%D0%BA%D0%B0%D0%BB%D0%B3%D0%B0%D0%BD-WWExzkPhwla1higZtJUGJxLJAq0DeU.png',
+  science: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Open%20Science%20Latinoam%C3%A9rica_%20Emblema%20del%20conocimiento%20%D0%BA%D0%B0%D0%BB%D0%B3%D0%B0%D0%BD-WWExzkPhwla1higZtJUGJxLJAq0DeU.png',
 }
 
-const areas = [
-  {
-    number: '01',
-    icon: Sparkles,
-    title: 'Inteligencia artificial',
-    description:
-      'Arquitecturas cognitivas, sistemas multiagente y gobernanza responsable de agentes inteligentes.',
-  },
-  {
-    number: '02',
-    icon: Network,
-    title: 'Sistemas distribuidos',
-    description:
-      'Infraestructuras digitales resilientes, interoperables y orientadas a la continuidad operativa.',
-  },
-  {
-    number: '03',
-    icon: BookOpen,
-    title: 'Ciencia abierta',
-    description:
-      'Conocimiento verificable mediante repositorios, identificadores persistentes y documentación pública.',
-  },
-  {
-    number: '04',
-    icon: Landmark,
-    title: 'Patrimonio digital',
-    description:
-      'Preservación y difusión del patrimonio histórico, cultural y territorial a través de tecnología.',
-  },
+const records = [
+  ['ORCID', '0009-0008-5050-1539', 'Identidad persistente'],
+  ['ISNI', '0000000531699229', 'Identidad normalizada'],
+  ['ZENODO', 'Repositorio de resultados', 'Datos · versiones · DOI'],
+  ['OSF', 'TAMV Paradigm / RDM Hub', 'Proyectos reproducibles'],
 ]
 
-const identifiers = [
-  { label: 'ORCID', value: '0009-0008-5050-1539', href: 'https://orcid.org/0009-0008-5050-1539' },
-  { label: 'ISNI', value: '0000000531699229', href: '#' },
-  { label: 'Zenodo', value: 'Producción científica y técnica', href: '#' },
-  { label: 'OSF', value: 'The TAMV Paradigm · RDM Digital Hub', href: '#' },
-]
-
-const projects = [
-  {
-    type: 'Programa de investigación',
-    title: 'Isabella Genesis',
-    description:
-      'Inteligencia artificial, sistemas cognitivos distribuidos y gobernanza de agentes inteligentes.',
-    tag: 'En investigación',
-  },
-  {
-    type: 'Arquitectura digital',
-    title: 'TAMV Sovereign Fabric',
-    description:
-      'Marco conceptual para arquitecturas interoperables, resilientes y orientadas a la autonomía tecnológica.',
-    tag: 'Conceptual',
-  },
-  {
-    type: 'Innovación territorial',
-    title: 'RDM Digital Hub',
-    description:
-      'Transformación digital, patrimonio cultural, turismo inteligente y desarrollo territorial para Real del Monte.',
-    tag: 'Activo',
-  },
+const research = [
+  ['01', 'Inteligencia artificial', 'Sistemas cognitivos, agentes inteligentes y gobernanza responsable.'],
+  ['02', 'Infraestructura digital', 'Arquitecturas interoperables, resilientes y soberanas.'],
+  ['03', 'Ciencia abierta', 'Datos, métodos y resultados documentados para consulta y reutilización.'],
+  ['04', 'Patrimonio y territorio', 'Tecnología aplicada a memoria, cultura y desarrollo local.'],
 ]
 
 export default function Page() {
   return (
-    <main className="site-shell">
-      <header className="site-header">
-        <a className="brand" href="#inicio" aria-label="TAMV Online Network, inicio">
-          <span className="brand-mark">T</span>
-          <span>
-            <strong>TAMV</strong>
-            <small>ONLINE NETWORK</small>
-          </span>
-        </a>
-        <nav className="main-nav" aria-label="Navegación principal">
-          <a href="#organizacion">Organización</a>
-          <a href="#investigacion">Investigación</a>
-          <a href="#proyectos">Proyectos</a>
-          <a href="#ciencia-abierta">Ciencia abierta</a>
-          <a href="#contacto">Contacto</a>
-        </nav>
-        <a className="header-action" href="#identificadores">
-          Ver identificadores <ArrowUpRight aria-hidden="true" />
-        </a>
-        <button className="mobile-menu" aria-label="Abrir menú"><Menu aria-hidden="true" /></button>
+    <main className="portal-shell">
+      <div className="utility-bar"><span>RED MEXICANA DE INVESTIGACIÓN APLICADA</span><span>REAL DEL MONTE · HIDALGO · MÉXICO</span><span>ES / EN</span></div>
+      <header className="portal-header">
+        <a className="wordmark" href="#inicio" aria-label="TAMV Online Network"><span className="wordmark-symbol">T</span><span><b>TAMV</b><small>ONLINE NETWORK</small></span></a>
+        <nav aria-label="Navegación principal"><a href="#institucion">Institución</a><a href="#investigacion">Investigación</a><a href="#repositorio">Repositorio</a><a href="#gobernanza">Gobernanza</a></nav>
+        <div className="header-tools"><a href="#repositorio" className="search-link"><Search aria-hidden="true" /> Buscar</a><a href="#contacto" className="primary-link">Colaborar <ArrowUpRight aria-hidden="true" /></a><button className="mobile-menu" aria-label="Abrir menú"><Menu aria-hidden="true" /></button></div>
       </header>
 
-      <section className="hero" id="inicio">
-        <div className="hero-grid" />
-        <div className="hero-content">
-          <div className="eyebrow"><span /> ORGANIZACIÓN INDEPENDIENTE DE INVESTIGACIÓN</div>
-          <h1>Conocimiento que<br /><em>permanece abierto.</em></h1>
-          <p className="hero-lead">Investigación aplicada, infraestructura digital y ciencia abierta desde México.</p>
-          <p className="hero-copy">TAMV Online Network es una organización independiente dedicada al desarrollo tecnológico, la preservación patrimonial y la generación de conocimiento verificable.</p>
-          <div className="hero-actions">
-            <a className="button button-primary" href="#organizacion">Conocer la organización <ChevronRight aria-hidden="true" /></a>
-            <a className="button button-ghost" href="#investigacion">Explorar investigación <ArrowUpRight aria-hidden="true" /></a>
-          </div>
-        </div>
-        <div className="hero-aside" aria-label="Sede institucional">
-          <div className="aside-line" />
-          <span>SEDE OPERATIVA</span>
-          <strong>Real del Monte,<br />Hidalgo, México</strong>
-          <small>20°08′N · 98°40′W</small>
-        </div>
-        <div className="hero-scroll"><span /> Desplazar para explorar</div>
-      </section>
+      <section className="masthead" id="inicio"><div className="masthead-copy"><p className="overline">TAMV ONLINE NETWORK · ORGANIZACIÓN INDEPENDIENTE</p><h1>Investigación con<br /><i>evidencia pública.</i></h1><p className="masthead-lead">Una infraestructura institucional para producir, preservar y compartir conocimiento tecnológico desde México.</p><div className="masthead-actions"><a className="solid-button" href="#investigacion">Explorar investigación <ArrowUpRight aria-hidden="true" /></a><a className="quiet-button" href="#institucion">Conocer TAMV <ChevronDown aria-hidden="true" /></a></div></div><aside className="masthead-index"><span>01 / 04</span><strong>Conocimiento<br />abierto</strong><p>Identidad · método · trazabilidad</p></aside></section>
 
-      <section className="evidence-strip" id="identificadores">
-        <div className="section-kicker">EVIDENCIA INSTITUCIONAL <span>—</span> 01</div>
-        <div className="evidence-intro"><strong>Una identidad pública,<br /><em>trazable y persistente.</em></strong><p>La actividad de TAMV se organiza alrededor de identificadores permanentes y repositorios abiertos.</p></div>
-        <div className="identifier-list">
-          {identifiers.map((item) => <a className="identifier" href={item.href} key={item.label}><span>{item.label}</span><strong>{item.value}</strong><ExternalLink aria-hidden="true" /></a>)}
-        </div>
-      </section>
+      <section className="institution-bar" id="institucion"><div><span className="section-label">01 — INSTITUCIÓN</span><h2>Un nodo de conocimiento<br /><i>con responsabilidad pública.</i></h2></div><div className="institution-note"><p>TAMV Online Network es una organización independiente dedicada a investigación aplicada, desarrollo tecnológico, preservación patrimonial y ciencia abierta.</p><a className="inline-link" href="#gobernanza">Leer sobre nuestro mandato <ArrowUpRight aria-hidden="true" /></a></div></section>
 
-      <section className="section about-section" id="organizacion">
-        <div className="section-heading"><div className="section-kicker">QUIÉNES SOMOS <span>—</span> 02</div><span className="section-index">TAMV / 2026</span></div>
-        <div className="about-grid"><h2>Una red para<br /><em>hacer visible</em> lo que importa.</h2><div className="about-text"><p className="large-copy">TAMV Online Network es una organización independiente de investigación aplicada, desarrollo tecnológico y ciencia abierta, originada en Real del Monte, Hidalgo, México.</p><p>Integramos investigación tecnológica, infraestructura digital, preservación patrimonial y gobernanza responsable de tecnologías emergentes. Nuestro trabajo se publica con la convicción de que el conocimiento debe poder ser consultado, rastreado y reutilizado.</p><a className="text-link" href="#ciencia-abierta">Nuestra declaración institucional <ArrowUpRight aria-hidden="true" /></a></div></div>
-        <div className="principles"><div><Fingerprint aria-hidden="true" /><strong>Verificabilidad</strong><span>Cada afirmación tiene una fuente.</span></div><div><ShieldCheck aria-hidden="true" /><strong>Responsabilidad</strong><span>Tecnología orientada al beneficio público.</span></div><div><Globe2 aria-hidden="true" /><strong>Interoperabilidad</strong><span>Abierto por diseño, local por origen.</span></div></div>
-      </section>
+      <section className="proof-section" id="repositorio"><div className="section-top"><span className="section-label">02 — IDENTIDAD Y TRAZABILIDAD</span><span className="section-meta">REGISTROS PÚBLICOS / 2026</span></div><div className="proof-intro"><h2>La confianza se<br /><i>documenta.</i></h2><p>Seguimos prácticas de identificación persistente, preservación digital y apertura de resultados inspiradas en los principales ecosistemas científicos internacionales.</p></div><div className="records-grid">{records.map(([label, value, detail]) => <a className="record-card" href="#contacto" key={label}><div className="record-top"><span>{label}</span><ExternalLink aria-hidden="true" /></div><strong>{value}</strong><small>{detail}</small></a>)}</div></section>
 
-      <section className="section areas-section" id="investigacion">
-        <div className="section-heading"><div className="section-kicker">LÍNEAS DE INVESTIGACIÓN <span>—</span> 03</div><a className="text-link" href="#proyectos">Ver todas las líneas <ArrowUpRight aria-hidden="true" /></a></div>
-        <div className="areas-grid">{areas.map((area) => { const Icon = area.icon; return <article className="area-card" key={area.number}><span className="card-number">{area.number}</span><Icon aria-hidden="true" /><h3>{area.title}</h3><p>{area.description}</p><a href="#proyectos" aria-label={`Explorar ${area.title}`}><ArrowUpRight aria-hidden="true" /></a></article> })}</div>
-      </section>
+      <section className="research-section" id="investigacion"><div className="section-top"><span className="section-label">03 — AGENDA DE INVESTIGACIÓN</span><a className="inline-link" href="#contacto">Ver catálogo completo <ArrowUpRight aria-hidden="true" /></a></div><div className="research-heading"><h2>Preguntas que<br /><i>merecen método.</i></h2><p>Cuatro líneas de trabajo para construir capacidades tecnológicas con impacto territorial, rigor metodológico y responsabilidad.</p></div><div className="research-list">{research.map(([number, title, text]) => <article key={number}><span className="research-number">{number}</span><h3>{title}</h3><p>{text}</p><ArrowUpRight aria-hidden="true" /></article>)}</div></section>
 
-      <section className="projects-section" id="proyectos">
-        <div className="section projects-inner"><div className="section-heading"><div className="section-kicker">PROYECTOS DESTACADOS <span>—</span> 04</div><span className="section-index light">CATÁLOGO PÚBLICO</span></div><div className="projects-intro"><h2>Investigación en<br /><em>movimiento.</em></h2><p>Una selección de programas y marcos de trabajo que documentan nuestra actividad actual.</p></div><div className="project-list">{projects.map((project, index) => <article className="project-row" key={project.title}><span className="project-index">0{index + 1}</span><div className="project-main"><small>{project.type}</small><h3>{project.title}</h3></div><p>{project.description}</p><span className="project-tag">{project.tag}</span><ArrowUpRight aria-hidden="true" /></article>)}</div></div>
-      </section>
+      <section className="repository-section"><div className="repository-panel"><div><span className="section-label">04 — REPOSITORIO DE RESULTADOS</span><h2>Publicaciones, datos<br /><i>y versiones.</i></h2><p>Un registro editorial para seguir el ciclo completo de cada iniciativa: pregunta, método, resultado y preservación.</p><a className="light-button" href="#contacto">Consultar producción <ArrowUpRight aria-hidden="true" /></a></div><div className="repository-stats"><div><strong>04</strong><span>Líneas activas</span></div><div><strong>03</strong><span>Proyectos destacados</span></div><div><strong>100%</strong><span>Enfoque documentado</span></div></div></div></section>
 
-      <section className="section partners-section" id="ciencia-abierta">
-        <div className="section-heading"><div className="section-kicker">ECOSISTEMA DE COLABORACIÓN <span>—</span> 05</div><span className="section-index">TRES NODOS / UNA VISIÓN</span></div>
-        <div className="partner-grid"><div className="partner-copy"><h2>La ciencia crece<br /><em>cuando circula.</em></h2><p>Colaboramos para construir infraestructuras de conocimiento que conecten tecnología, territorio y comunidad.</p><a className="button button-primary" href="mailto:anubiscastillo@visitarealdelmonte.online">Iniciar una colaboración <ArrowUpRight aria-hidden="true" /></a></div><div className="partner-logos"><div className="logo-card logo-tamv"><img src={logos.tamv} alt="Logotipo oficial de TAMV Online Network" /></div><div className="logo-card"><img src={logos.isabella} alt="Logotipo de Isabella Villaseñor AI" /></div><div className="logo-card science-logo"><img src={logos.science} alt="Logotipo de Open Science Latinoamérica" /></div></div></div>
-      </section>
+      <section className="governance-section" id="gobernanza"><div className="section-top"><span className="section-label">05 — PRINCIPIOS DE GOBERNANZA</span><span className="section-meta">MARCO INSTITUCIONAL</span></div><div className="governance-grid"><div><ShieldCheck aria-hidden="true" /><h3>Rigor antes que ruido</h3><p>Declaramos alcance, limitaciones, fuentes y criterios de validación.</p></div><div><Network aria-hidden="true" /><h3>Interoperabilidad</h3><p>Preferimos estándares, identificadores y formatos que otros puedan reutilizar.</p></div><div><Globe2 aria-hidden="true" /><h3>Impacto territorial</h3><p>La tecnología adquiere sentido cuando fortalece comunidades y patrimonio.</p></div><div><BookOpen aria-hidden="true" /><h3>Acceso abierto</h3><p>El conocimiento financiado y producido con vocación pública debe circular.</p></div></div></section>
 
-      <footer className="site-footer" id="contacto"><div className="footer-top"><div className="footer-brand"><div className="brand"><span className="brand-mark">T</span><span><strong>TAMV</strong><small>ONLINE NETWORK</small></span></div><p>Tecnología avanzada mexicana versátil.<br />Investigación, evidencia y conocimiento abierto.</p></div><div className="footer-links"><div><span>EXPLORAR</span><a href="#organizacion">Organización</a><a href="#investigacion">Investigación</a><a href="#proyectos">Proyectos</a></div><div><span>RECURSOS</span><a href="#identificadores">Identificadores</a><a href="#ciencia-abierta">Ciencia abierta</a><a href="#contacto">Contacto</a></div><div><span>CONTACTO</span><a href="mailto:anubiscastillo@visitarealdelmonte.online"><Mail aria-hidden="true" /> anubiscastillo@<br />visitarealdelmonte.online</a><p>Real del Monte, Hidalgo<br />México</p></div></div></div><div className="footer-bottom"><span>© 2026 TAMV Online Network</span><span>Conocimiento abierto · Impacto colectivo</span><span>ES / EN</span></div></footer>
+      <section className="affiliations" id="contacto"><div className="affiliation-copy"><span className="section-label">06 — ECOSISTEMA</span><h2>Tres identidades.<br /><i>Una arquitectura común.</i></h2><p>Iniciativas complementarias para investigación, inteligencia artificial y ciencia abierta en Latinoamérica.</p><a className="solid-button" href="mailto:anubiscastillo@visitarealdelmonte.online">Iniciar colaboración <ArrowUpRight aria-hidden="true" /></a></div><div className="logo-rail"><div className="affiliation-card tamv-card"><img src={logos.tamv} alt="Logotipo oficial de TAMV Online Network" /></div><div className="affiliation-card"><img src={logos.isabella} alt="Logotipo de Isabella Villaseñor AI" /></div><div className="affiliation-card science-card"><img src={logos.science} alt="Logotipo de Open Science Latinoamérica" /></div></div></section>
+
+      <footer><div className="footer-main"><div className="wordmark"><span className="wordmark-symbol">T</span><span><b>TAMV</b><small>ONLINE NETWORK</small></span></div><p>Investigación aplicada · infraestructura digital · ciencia abierta</p><div className="footer-contact"><span>CONTACTO INSTITUCIONAL</span><a href="mailto:anubiscastillo@visitarealdelmonte.online">anubiscastillo@visitarealdelmonte.online</a><span>Real del Monte, Hidalgo, México</span></div></div><div className="footer-bottom"><span>© 2026 TAMV Online Network</span><span>Identidad · método · trazabilidad</span><span>Política de apertura</span></div></footer>
     </main>
   )
 }
