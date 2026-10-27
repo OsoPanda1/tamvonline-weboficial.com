@@ -215,33 +215,31 @@ export async function createVetraProposal(input: VetraProposalSubmission): Promi
       !input.filterDeclarations.understandsDeclarationsAreNotApproval) {
     throw new Error("VETRA gate declarations are incomplete.");
   }
+  if (input.sourcesAndArtifacts.length > 20) throw new Error("Too many proposal references.");
   const rows = await supabaseFetch<Array<{ id: string; proposal_code: string; status: string; created_at: string }>>(
-    "tamv_vetra_proposals?select=id,proposal_code,status,created_at",
+    "rpc/tamv_vetra_submit_proposal",
     {
       method: "POST",
-      headers: { prefer: "return=representation" },
       body: JSON.stringify({
-        submitted_by_tamv_id: input.submittedByTamvId,
-        submitter_display_name: input.submitterDisplayName,
-        title: input.title,
-        proposal_type: input.proposalType,
-        maturity_stage: input.maturityStage,
-        abstract: input.abstract,
-        problem_statement: input.problemStatement,
-        contribution_claim: input.contributionClaim,
-        methodology: input.methodology,
-        reproducibility_plan: input.reproducibilityPlan,
-        sources_and_artifacts: input.sourcesAndArtifacts,
-        ethics_and_harm: input.ethicsAndHarm,
-        privacy_and_data: input.privacyAndData,
-        security_plan: input.securityPlan,
-        rights_and_ip: input.rightsAndIp,
-        sustainability_plan: input.sustainabilityPlan,
-        funding_and_conflicts: input.fundingAndConflicts,
-        filter_declarations: input.filterDeclarations,
-        submitter_attested: true,
-        status: "received",
-        risk_screening_status: "pending",
+        p_submitted_by_tamv_id: input.submittedByTamvId,
+        p_submitter_display_name: input.submitterDisplayName,
+        p_title: input.title,
+        p_proposal_type: input.proposalType,
+        p_maturity_stage: input.maturityStage,
+        p_abstract: input.abstract,
+        p_problem_statement: input.problemStatement,
+        p_contribution_claim: input.contributionClaim,
+        p_methodology: input.methodology,
+        p_reproducibility_plan: input.reproducibilityPlan,
+        p_sources_and_artifacts: input.sourcesAndArtifacts,
+        p_ethics_and_harm: input.ethicsAndHarm,
+        p_privacy_and_data: input.privacyAndData,
+        p_security_plan: input.securityPlan,
+        p_rights_and_ip: input.rightsAndIp,
+        p_sustainability_plan: input.sustainabilityPlan,
+        p_funding_and_conflicts: input.fundingAndConflicts,
+        p_filter_declarations: input.filterDeclarations,
+        p_submitter_attested: true,
       }),
     },
   );
@@ -250,7 +248,6 @@ export async function createVetraProposal(input: VetraProposalSubmission): Promi
   }
   return rows[0];
 }
-
 
 export async function getRecentVetraProposalCount(tamvId: string, hours = 24): Promise<number> {
   if (!/^TAMV-[0-9A-F]{26}$/.test(tamvId)) throw new Error("Invalid TAMV member identifier.");
