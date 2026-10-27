@@ -18,7 +18,6 @@ export async function GET(request: Request) {
     const providerEnv = provider === "github" ? "AUTH0_GITHUB_CONNECTION" : provider === "orcid" ? "AUTH0_ORCID_CONNECTION" : null;
     const connection = providerEnv ? process.env[providerEnv]?.trim() : "";
     if (providerEnv && !connection) {
-      const message = provider === "github" ? "GitHub aún no está conectado al tenant Auth0. Configura AUTH0_GITHUB_CONNECTION después de habilitar y probar la conexión en Auth0." : "ORCID aún no está conectado al tenant Auth0. Configura AUTH0_ORCID_CONNECTION después de habilitar y probar la conexión OIDC en Auth0.";
       return NextResponse.redirect(new URL("/registro?error=" + (provider === "github" ? "github_provider_unconfigured" : "orcid_provider_unconfigured"), config.appBaseUrl));
     }
     if (connection && !/^[A-Za-z0-9_.-]{1,128}$/.test(connection)) {
