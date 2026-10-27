@@ -308,7 +308,7 @@ export type VetraProposalForReview = {
 
 export async function getVetraReviewQueue(limit = 30): Promise<VetraProposalForReview[]> {
   const count = Math.min(50, Math.max(1, Math.floor(limit)));
-  const statuses = "received,administrative_screening,independent_review,minor_revision,major_revision";
+  const statuses = "received,administrative_screening,independent_review";
   const rows = await supabaseFetch<VetraProposalForReview[]>(
     `tamv_vetra_proposals?select=id,proposal_code,submitter_display_name,title,proposal_type,maturity_stage,abstract,problem_statement,contribution_claim,methodology,reproducibility_plan,sources_and_artifacts,ethics_and_harm,privacy_and_data,security_plan,rights_and_ip,sustainability_plan,funding_and_conflicts,filter_declarations,status,risk_screening_status,created_at&status=in.(${statuses})&order=created_at.asc&limit=${count}`,
   );
