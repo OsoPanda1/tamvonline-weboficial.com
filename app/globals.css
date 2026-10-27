@@ -888,3 +888,31 @@ h1 em,h2 em{color:#9dc7e5;font-style:italic}
 .orcid-state-success{display:flex;align-items:flex-start;gap:8px;padding:11px 12px;border:1px solid #356b5b;background:#0c241e;color:#adddc7;font-size:10px;line-height:1.7}
 .orcid-state-success svg{width:16px;height:16px;flex-shrink:0;color:#91d6b9}
 @media(max-width:480px){.form-provider-actions>.button{width:100%}}
+
+
+/* HCU evidence discovery cards — bibliographic metadata is not a validation verdict */
+.hcu-live-evidence{margin:14px 0;padding:13px;border:1px solid #2c4558;background:#08141e}
+.hcu-live-evidence .hcu-inspector-info{margin:0 0 10px}
+.hcu-live-evidence .hcu-inspector-info>p{display:block;font-size:8px;color:#8ba4b6}
+.hcu-live-evidence .hcu-button-secondary{width:100%}
+.hcu-evidence-results{margin-top:12px}
+.hcu-evidence-results-head{display:flex;flex-direction:column;gap:5px;padding:10px;border:1px solid #2c4354;background:#0b1a26}
+.hcu-evidence-results-head strong{font-size:10px;color:#cde4f1}
+.hcu-evidence-results-head small{font-size:8px;color:#829eaf;line-height:1.6;overflow-wrap:anywhere}
+.hcu-evidence-providers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0}
+.hcu-evidence-providers>span{display:flex;flex-direction:column;gap:4px;padding:7px;border:1px solid #253c4e;background:#091722}
+.hcu-evidence-providers>span>b{font-size:8px;color:#b8d0de;font-weight:600}
+.hcu-evidence-providers>span>small{font-size:7px;color:#8199aa}
+.hcu-evidence-providers .provider-unavailable{border-color:#664b40;background:#1b1512}
+.hcu-evidence-providers .provider-empty{border-color:#4a5160}
+.hcu-evidence-result{padding:11px 0;border-bottom:1px solid #203749}
+.hcu-evidence-result>a{display:flex;align-items:flex-start;gap:6px;color:#bfe5fa;font-size:9px;line-height:1.65;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.hcu-evidence-result>a svg{width:12px;height:12px;flex-shrink:0;margin-top:2px}
+.hcu-evidence-result>p{margin:5px 0;color:#8da7b8;font-size:8px;line-height:1.65}
+.hcu-evidence-result>small{display:block;color:#8297a6;font-size:7px;line-height:1.7}
+.hcu-evidence-result>span{display:block;margin-top:5px;color:#7aa8c3;font-size:7px;overflow-wrap:anywhere}
+.hcu-evidence-empty{padding:10px;border:1px solid #35485a;color:#91a8b7;font-size:8px;line-height:1.7}
+.hcu-evidence-method{margin:10px 0 0;color:#718b9d;font-size:7px;line-height:1.75}
+.hcu-notice-error{border-color:#6f454a;background:#201218}
+.hcu-notice-error>svg{color:#e6a4a8}
+.hcu-notice-error p{color:#d9afb4}
