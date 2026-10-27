@@ -12,7 +12,8 @@ const groups=[
   {href:'/vetra',label:'VETRA Ω∞ · Evaluación'},
  ]},
  {label:'Comunidad',key:'community',items:[
-  {href:'/comunidad',label:'Directorio de investigadores'},
+  {href:'/comunidad',label:'Comunidad y colaboración'},
+  {href:'/miembros',label:'Directorio público de miembros'},
   {href:'/membresia',label:'Membresías y participación'},
   {href:'/contribuir',label:'Cómo contribuir'},
   {href:'/roadmap',label:'Roadmap institucional'},
