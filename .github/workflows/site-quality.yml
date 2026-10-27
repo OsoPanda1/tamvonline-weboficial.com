@@ -1,4 +1,4 @@
-name: Static site quality
+name: TAMV quality gates
 
 on:
   push:
@@ -11,15 +11,32 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Validate static website
+  quality:
+    name: Validate application and production build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Python
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Set up Python for static HTML validation
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Run static validation
-        run: python scripts/validate_site.py
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate institutional HTML artifacts
+        run: pnpm validate:site
+      - name: Validate App Router registry requirements
+        run: pnpm validate:app
+      - name: TypeScript checks
+        run: pnpm typecheck
+      - name: Production build
+        run: pnpm build
