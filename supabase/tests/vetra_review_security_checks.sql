@@ -61,5 +61,19 @@ begin
     raise exception 'FAIL: public/anon/authenticated roles can access private VETRA records';
   end if;
 
-  raise notice 'PASS: VETRA tables have RLS, required server inserts, and no browser-facing grants.';
+  if not has_function_privilege('service_role', 'public.tamv_vetra_submit_proposal(text,text,text,text,text,text,text,text,text,text,jsonb,text,text,text,text,text,text,jsonb,boolean)', 'EXECUTE') then
+    raise exception 'FAIL: service_role cannot execute atomic VETRA proposal submission RPC';
+  end if;
+  if has_function_privilege('anon', 'public.tamv_vetra_submit_proposal(text,text,text,text,text,text,text,text,text,text,jsonb,text,text,text,text,text,text,jsonb,boolean)', 'EXECUTE')
+     or has_function_privilege('authenticated', 'public.tamv_vetra_submit_proposal(text,text,text,text,text,text,text,text,text,text,jsonb,text,text,text,text,text,text,jsonb,boolean)', 'EXECUTE') then
+    raise exception 'FAIL: browser-facing role can execute VETRA proposal submission RPC';
+  end if;
+  if not has_function_privilege('service_role', 'public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text)', 'EXECUTE') then
+    raise exception 'FAIL: service_role cannot execute atomic VETRA final-decision RPC';
+  end if;
+  if has_function_privilege('anon', 'public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text)', 'EXECUTE')
+     or has_function_privilege('authenticated', 'public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text)', 'EXECUTE') then
+    raise exception 'FAIL: browser-facing role can execute VETRA final-decision RPC';
+  end if;
+  raise notice 'PASS: VETRA tables have RLS, server-only inserts/RPCs, and no browser-facing grants.';
 end $$;
