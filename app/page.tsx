@@ -48,7 +48,7 @@ export default function HomePage() {
           <a href="#lineas">Líneas de trabajo</a>
           <a href="#validacion">Validación</a>
           <Link href="/membresia">Membresía</Link>
-          <Link href="/catalogo">Catálogo</Link><Link href="/investigacion">Investigación</Link><Link href="/resolver">Resolver TAMV ID</Link><Link href="/auditoria">Auditoría e IP</Link><Link href="/vetra">VETRA Ω</Link><Link href="/roadmap">Roadmap</Link><Link href="/hcu">HCU Ω∞</Link>
+          <Link href="/catalogo">Catálogo</Link><Link href="/investigacion">Investigación</Link><Link href="/comunidad">Comunidad</Link><Link href="/resolver">Resolver TAMV ID</Link><Link href="/auditoria">Auditoría e IP</Link><Link href="/vetra">VETRA Ω</Link><Link href="/roadmap">Roadmap</Link><Link href="/hcu">HCU Ω∞</Link>
         </nav>
         <div className="header-actions">
           <Link className="header-login" href="/cuenta">Acceder</Link>
