@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/privacidad`, lastModified: updated, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${base}/auditoria`, lastModified: updated, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/investigacion`, lastModified: updated, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/comunidad`, lastModified: updated, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/vetra`, lastModified: updated, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${base}/roadmap`, lastModified: updated, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/hcu`, lastModified: updated, changeFrequency: 'weekly', priority: 0.9 },
