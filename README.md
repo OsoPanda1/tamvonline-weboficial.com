@@ -1,20 +1,21 @@
 # TAMV Online Network — Institutional Research Platform
 
-A Next.js App Router site for TAMV Online Network, with a documented institutional profile, VETRA Ω∞ proposal screening and governance framework, institutional roadmap, public research catalogue, member identity registry (TAMV ID), research metadata discovery and a preliminary intellectual-property workflow.
+A Next.js App Router site for TAMV Online Network, with a documented institutional profile, VETRA Ω∞ proposal screening and governance framework, TAMV Ω∞ HCU transformation map, institutional roadmap, public research catalogue, member identity registry (TAMV ID), federated research metadata discovery, verified ORCID linking and a preliminary intellectual-property workflow.
 
 > **Evidence policy:** a website, identifier, DOI, repository entry, citation count or patent search result does not by itself prove peer review, technical function, organizational eligibility, patentability, authorship ownership, commercial value or legal compliance. Each claim must keep its source and scope.
 
 ## Main capabilities
 
 - Institutional identity: mission, vision, founder profile, purpose, areas of work, membership, governance and editorial principles.
-- TAMV ID: Auth0-based sign-in, private-by-default profile and Supabase-backed persistent identifier registry. TAMV ID is internal to this platform and is not a replacement for ORCID, ISNI, DOI or government identity.
+- TAMV ID: Auth0 Authorization Code + PKCE sign-in/signup, private-by-default profile and Supabase-backed persistent identifier registry. Email login is available when the Auth0 tenant is configured. GitHub can be enabled as an Auth0 upstream connection. ORCID can be linked through direct OAuth to a registered member; a manually typed ORCID is only declared, not verified. TAMV ID is not a replacement for ORCID, ISNI, DOI or government identity.
 - Public discovery: catalogue, research/publication index, resource directory and contributor guide.
 - Federated research search: public metadata search through OpenAlex, Crossref, DataCite, OpenAIRE Graph and PubMed/NCBI, plus ROR organization lookup.
 - DOI metadata audit: compares Crossref, DataCite and OpenAlex records, returns per-provider states, shows missing metadata and calculates an evidence-readiness/transfer-triage score.
 - IP discovery: EPO Open Patent Services searches when server-side credentials are configured, plus official manual links to USPTO, WIPO PATENTSCOPE, Espacenet and Google Patents.
 - Optional provenance snapshots: SHA-256 of the exact generated DOI-audit JSON and optional persistence in Supabase for a registered TAMV member.
 - VETRA Ω∞: three mandatory gates (integrity/provenance; method/reproducibility; responsibility/rights/impact), fourteen evaluation domains, human review, conflict declarations, appeals and an institutional roadmap.
-- VETRA proposal intake: server-side validation and private Supabase tables for proposals, reviews and decisions. The intake is disabled until the migration, privacy/retention policy and governance are approved.
+- VETRA proposal intake: server-side validation and private Supabase tables for proposals, reviews and decisions. The intake is disabled until migration, privacy/retention policy and governance are approved.
+- TAMV Ω∞ HCU: interactive transformation-map concept with six domains, 25 initial nodes, 7 multi-entity hyperedges, search, risk/evidence views, temporal exploration, local-only Cognitive Pod simulation, snapshot export and federated literature metadata search. HCU axis values and scenarios remain explicitly illustrative.
 - Executive brief, canonical VETRA regulations, quantitative metrics/use cases, technical English foundations and roadmap documents.
 - Automated source checks and production build through GitHub Actions.
 
@@ -32,6 +33,10 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - app/page.tsx: institutional homepage.
 - app/auditoria/page.tsx: federated research search, DOI audit, patent/IP panel, API map and Isabella triage display.
 - app/investigacion/page.tsx: public record index with explicit source-evidence boundaries.
+- app/hcu/page.tsx: public HCU transformation-universe page.
+- app/hcu/hcu-universe.tsx: interactive canvas, selected-node inspector, local simulation controls and metadata lookup via the existing research API.
+- lib/hcu-model.ts: six domains, initial entity seeds, hyperedge hypotheses and public research catalog links.
+- app/api/orcid/connect/route.ts and app/api/orcid/callback/route.ts: direct ORCID OAuth linking for a signed-in member; secrets remain server-side.
 - app/api/research/search/route.ts: OpenAlex, Crossref, DataCite, OpenAIRE, PubMed/NCBI and ROR search adapters.
 - app/api/research/audit/route.ts: DOI metadata comparison, SHA-256 digest and optional Supabase snapshot.
 - app/api/research/patents/route.ts: EPO OPS OAuth connector plus official manual IP-search links.
@@ -40,9 +45,12 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - supabase/migrations/202610270001_tamv_identity_registry.sql: TAMV ID/member/identifier tables.
 - supabase/migrations/202610270002_research_audit_snapshots.sql: private research audit snapshots.
 - supabase/migrations/202610270003_vetra_proposals_reviews.sql: private VETRA proposals, reviewer assessments and human decisions.
+- supabase/migrations/202610270004_orcid_verified_link.sql: server-only RPC and uniqueness controls for an ORCID authenticated via OAuth.
 - supabase/tests/vetra_review_security_checks.sql: read-only grants/RLS checks for VETRA tables.
 - supabase/tests/tamv_identity_registry_checks.sql and supabase/tests/vetra_review_security_checks.sql: read-only checks of member-table RLS and grants.
 - docs/tamv-id-runbook.md: Auth0, Supabase and TAMV ID setup.
+- docs/identity-providers-runbook.md: GitHub/Auth0 connection, email signup and direct ORCID OAuth configuration and tests.
+- docs/hcu-methodology.md: HCU evidence model, hyperedge requirements and prototype boundaries.
 - docs/research-audit-api-map.md: connector/API map, data access limits, evidence-scoring weights and IP boundaries.
 - docs/vetra-executive-brief.md: executive brief and governance decision requested.
 - docs/CANON-VETRA-OMEGA-INFINITY-2026-V1.0.md: canonical regulations and the three-gate framework.
@@ -60,7 +68,7 @@ Run pnpm install --frozen-lockfile, then pnpm dev.
 
 Quality checks: pnpm validate:app, pnpm typecheck and pnpm build.
 
-The static App validator is source inspection, not a runtime/API test. Browser workflows, external API behavior, legal review and production deployment must be checked separately.
+The static App validator is source inspection, not a runtime/API test. Browser workflows, external API behavior, legal review and production deployment must be checked separately. Auth0 GitHub connections and ORCID OAuth credentials require configuration in their respective provider portals; no credentials are committed.
 
 ## Public research API connectors
 
@@ -137,6 +145,14 @@ Review policies, weights and proposed thresholds are versioned in the VETRA docu
 ### VETRA intake activation gate
 
 The form exports a local JSON draft when submissions are closed. Server submission is enabled only with the `TAMV_VETRA_SUBMISSIONS_ENABLED=true` environment variable, confirmed data-controller/privacy-contact values, `TAMV_VETRA_RETENTION_POLICY_APPROVED=true`, configured server-only Supabase keys and migration 003 applied and tested. Setting the environment flag does not itself confirm a migration has been run.
+
+## HCU Ω∞ transformation map
+
+HCU is a conceptual map and literature-discovery surface, not a validated forecast or causal model. Its 25 seed nodes, seven multi-entity relations, axis values, scenario weights and local pods are illustrative. The selected-node evidence search uses the repository's federated research metadata endpoint; provider records identify candidate sources and do not constitute peer-review or truth verification. See `docs/hcu-methodology.md`.
+
+## Identity providers and ORCID
+
+Auth0 signup/email login requires configured tenant connections and production callback values. GitHub login is exposed only when `AUTH0_GITHUB_CONNECTION` names an enabled Auth0 connection. Direct ORCID link requires `ORCID_CLIENT_ID`, `ORCID_CLIENT_SECRET`, the exact callback `APP_BASE_URL/api/orcid/callback`, and migration 004. These environment variables default empty; provider integration is not live until configured and browser-tested. Manual ORCID fields are stored as declared, not verified.
 
 ## ROR preparation
 
