@@ -70,7 +70,9 @@ async function supabaseFetch<T>(path: string, init: RequestInit = {}): Promise<T
     cache: "no-store",
     headers: {
       apikey: key,
-      authorization: `Bearer ${key}`,
+      // Opaque sb_secret_* keys are API keys, not JWTs. Send them only as apikey.
+      // Legacy service_role keys are JWTs and can also be sent as Bearer credentials.
+      ...(!key.startsWith("sb_secret_") ? { authorization: `Bearer ${key}` } : {}),
       accept: "application/json",
       ...(init.body ? { "content-type": "application/json" } : {}),
       ...(init.headers || {}),
