@@ -172,6 +172,9 @@ begin
 
   perform 1 from public.tamv_vetra_proposals where tamv_vetra_proposals.id=p_proposal_id for update;
   if not found then raise exception 'VETRA proposal not found'; end if;
+  if exists (select 1 from public.tamv_vetra_decisions where tamv_vetra_decisions.proposal_id=p_proposal_id) then
+    raise exception 'A final VETRA decision already exists for this proposal version';
+  end if;
 
   with latest_reviews as (
     select distinct on (reviewer_tamv_id) reviewer_tamv_id, recommendation, independence_declaration, domain_scores
