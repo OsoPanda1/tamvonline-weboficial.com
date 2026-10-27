@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readSessionFromCookie, sameOriginRequest, sessionCookieName } from "@/lib/auth0-native";
-import { createVetraProposal, getMemberByAuth0Sub, getRecentVetraProposalCount, SupabaseConfigurationError } from "@/lib/supabase-rest";
+import { createVetraProposal, getMemberByAuth0Sub, getRecentVetraProposalCount, getVetraProposalsForMember, SupabaseConfigurationError } from "@/lib/supabase-rest";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,13 +23,34 @@ function httpsUrl(value: unknown): string | null {
   } catch { return null; }
 }
 
-function configured(): boolean {
-  return process.env.TAMV_VETRA_SUBMISSIONS_ENABLED === "true"
-    && Boolean(process.env.TAMV_DATA_CONTROLLER_NAME?.trim())
+function dataAndSchemaReady(): boolean {
+  return Boolean(process.env.TAMV_DATA_CONTROLLER_NAME?.trim())
     && Boolean(process.env.TAMV_DATA_CONTROLLER_ADDRESS?.trim())
     && Boolean(process.env.TAMV_PRIVACY_CONTACT_EMAIL?.trim())
     && process.env.TAMV_VETRA_RETENTION_POLICY_APPROVED === "true"
     && process.env.TAMV_VETRA_SCHEMA_VERIFIED === "true";
+}
+function configured(): boolean {
+  return process.env.TAMV_VETRA_SUBMISSIONS_ENABLED === "true" && dataAndSchemaReady();
+}
+
+export async function GET(request: Request) {
+  const cookie = request.headers.get("cookie")?.split(";").map((item) => item.trim())
+    .find((item) => item.startsWith(sessionCookieName() + "="))
+    ?.slice(sessionCookieName().length + 1);
+  const session = readSessionFromCookie(cookie);
+  if (!session) return NextResponse.json({ error: "Inicia sesión con Auth0 para consultar tus propuestas." }, { status: 401, headers: { "cache-control": "no-store" } });
+  if (!dataAndSchemaReady()) return NextResponse.json({ error: "El seguimiento de VETRA no está habilitado hasta verificar la base y la política de retención." }, { status: 503, headers: { "cache-control": "no-store" } });
+  try {
+    const member = await getMemberByAuth0Sub(session.sub);
+    if (!member) return NextResponse.json({ error: "Completa tu TAMV ID para consultar propuestas." }, { status: 403, headers: { "cache-control": "no-store" } });
+    const items = await getVetraProposalsForMember(member.tamv_id);
+    return NextResponse.json({ ok: true, items }, { headers: { "cache-control": "no-store, private" } });
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) return NextResponse.json({ error: "La base de datos no está configurada." }, { status: 503 });
+    console.error("VETRA member submission lookup failed");
+    return NextResponse.json({ error: "No fue posible consultar tus propuestas." }, { status: 500, headers: { "cache-control": "no-store" } });
+  }
 }
 
 export async function POST(request: Request) {
