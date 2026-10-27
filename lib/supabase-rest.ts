@@ -34,6 +34,7 @@ export type RegisterMemberInput = {
   auth0Sub: string;
   email: string;
   emailVerified: boolean;
+  adultConfirmed: boolean;
   displayName: string;
   bio: string | null;
   affiliation: string | null;
@@ -93,6 +94,7 @@ export async function registerTamvMember(input: RegisterMemberInput) {
       p_auth0_sub: input.auth0Sub,
       p_email: input.email,
       p_email_verified: input.emailVerified,
+      p_adult_confirmed: input.adultConfirmed,
       p_display_name: input.displayName,
       p_bio: input.bio,
       p_affiliation: input.affiliation,
