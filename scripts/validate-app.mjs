@@ -11,6 +11,7 @@ const required = [
   "app/cuenta/page.tsx",
   "app/components/site-header.tsx",
   "app/comunidad/page.tsx",
+  "scripts/smoke-routes.mjs",
   "app/api/auth/login/route.ts",
   "app/api/auth/callback/route.ts",
   "app/api/auth/logout/route.ts",
@@ -110,6 +111,7 @@ const vetraMigration = await source("supabase/migrations/202610270003_vetra_prop
 const vetraForm = await source("app/vetra/propuesta-form.tsx");
 const privacy = await source("app/privacidad/page.tsx");
 const workflow = await source(".github/workflows/site-quality.yml");
+const smokeRoutes = await source("scripts/smoke-routes.mjs");
 const pkgText = await source("package.json");
 const vercelText = await source("vercel.json");
 const envExample = await source(".env.example");
@@ -119,7 +121,7 @@ let vercel = {};
 try { pkg = JSON.parse(pkgText); } catch { failures.push("package.json is invalid JSON"); }
 try { vercel = JSON.parse(vercelText); } catch { failures.push("vercel.json is invalid JSON"); }
 
-for (const key of ["build", "typecheck", "validate:site", "validate:app"]) {
+for (const key of ["build", "typecheck", "validate:site", "validate:app", "smoke:routes"]) {
   if (!pkg.scripts?.[key]) failures.push("package.json missing script: " + key);
 }
 for (const term of ["createCipheriv", "createDecipheriv", "code_challenge_method", "secureEquals", "verifyAuth0IdToken", "nonce", "RS256"]) {
@@ -177,7 +179,8 @@ if (!vercelText.includes("Content-Security-Policy")) warnings.push("Review the l
 if (!envExample.includes("TAMV_VETRA_SUBMISSIONS_ENABLED=false") || !envExample.includes("TAMV_VETRA_RETENTION_POLICY_APPROVED=false") || !envExample.includes("TAMV_VETRA_SCHEMA_VERIFIED=false") || !envExample.includes("TAMV_VETRA_GOVERNANCE_APPROVED=false") || !envExample.includes("TAMV_VETRA_REVIEW_CONSOLE_ENABLED=false") || !envExample.includes("TAMV_VETRA_DECISION_CONSOLE_ENABLED=false")) failures.push("VETRA launch flags must default to false.");
 if (/NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE|SECRET)/i.test(supabase + register + envExample)) failures.push("A Supabase administrative key must never use a NEXT_PUBLIC_ variable.");
 if (!privacy.includes("TAMV_DATA_CONTROLLER_ADDRESS") || !register.includes("TAMV_PRIVACY_CONTACT_EMAIL")) failures.push("Privacy launch gate is missing controller/address/contact checks.");
-if (!workflow.includes("pnpm validate:app") || !workflow.includes("pnpm typecheck") || !workflow.includes("pnpm build")) failures.push("GitHub Actions is missing one or more application quality gates.");
+if (!workflow.includes("pnpm validate:app") || !workflow.includes("pnpm typecheck") || !workflow.includes("pnpm build") || !workflow.includes("pnpm smoke:routes")) failures.push("GitHub Actions is missing one or more application quality gates.");
+for (const term of ["/miembros", "/hcu", "/vetra", "/auditoria", "/comunidad", "text/html", "redirect to /miembros", "unauthenticated access is gated"]) { if (!smokeRoutes.includes(term)) failures.push("Post-build smoke tests missing route/security assertion: " + term); }
 const headers = vercel.headers?.flatMap((entry) => entry.headers || []) || [];
 for (const h of ["X-Content-Type-Options", "X-Frame-Options", "Content-Security-Policy", "Referrer-Policy"]) {
   if (!headers.some((header) => header.key === h)) warnings.push("Vercel header not found: " + h);
