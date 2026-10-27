@@ -1,6 +1,6 @@
 import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
-import { GitBranch, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, GitBranch, ShieldCheck } from 'lucide-react';
 import HcuUniverse from './hcu-universe';
 
 export const dynamic='force-dynamic';
