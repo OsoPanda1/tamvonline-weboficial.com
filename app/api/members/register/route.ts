@@ -82,6 +82,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "El formulario no contiene JSON válido." }, { status: 400 });
   }
 
+  if (body.adultConfirmed !== true) return NextResponse.json({ error: 'Para este registro debes confirmar que tienes 18 años o más.' }, { status: 400 });
   if (body.termsAccepted !== true || body.privacyAccepted !== true) {
     return NextResponse.json({ error: "Debes aceptar los términos de participación y reconocer el aviso de privacidad vigente." }, { status: 400 });
   }
@@ -131,6 +132,7 @@ export async function POST(request: Request) {
       auth0Sub: session.sub,
       email: session.email,
       emailVerified: session.emailVerified,
+      adultConfirmed: true,
       displayName, bio, affiliation, countryCode, researchAreas,
       profileVisibility: visibility,
       publicProfileConsent: publicConsent,
