@@ -141,7 +141,8 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
   }
 
   return <form className="form-panel" onSubmit={submit}>
-    <div className="form-panel-heading"><Fingerprint aria-hidden="true" /><div><h2>Crear tu ficha TAMV</h2><p className="subtext">Identidad declarada, información mínima y opciones de visibilidad transparentes.</p></div></div>
+    <div className="form-panel-heading"><Fingerprint aria-hidden="true" /><div><h2>{initialProfile ? 'Actualizar tu ficha TAMV' : 'Crear tu ficha TAMV'}</h2><p className="subtext">Identidad declarada, información mínima y opciones de visibilidad transparentes.</p></div></div>
+    {pendingOrcid && <div className="orcid-state-success" role="status"><CheckCircle2 aria-hidden="true"/><span>ORCID autenticado mediante OAuth: <strong>{pendingOrcid}</strong>. Se vinculará después de guardar tu ficha con correo verificado. <a href="/api/orcid/pending">Cancelar esta vinculación pendiente</a>.</span></div>}
     <div className="identity-chip"><ShieldCheck aria-hidden="true" /><div><strong>{email || 'Sesión autenticada'}</strong><small>{emailVerified ? 'Correo verificado por Auth0' : 'Correo no verificado · se requiere verificarlo antes de registrar'}</small></div></div>
     {!emailVerified && <div className="form-alert error" role="alert">Tu identidad está autenticada, pero el correo no figura como verificado en Auth0. Verifícalo en el proveedor antes de solicitar el TAMV ID.</div>}
     <div className="form-grid">
@@ -161,7 +162,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="field field-wide"><label className="check-row"><input type="checkbox" checked={privacyAccepted} onChange={(e)=>setPrivacyAccepted(e.target.checked)} required /><span>He leído el <a href="/privacidad" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a> y comprendo qué datos se almacenan y con qué finalidad.</span></label></div>
     </div>
     {error && <div className="form-alert error" role="alert">{error}</div>}
-    <div className="form-actions"><button className="button button-primary" type="submit" disabled={submitting || !emailVerified}>{submitting ? 'Guardando ficha…' : 'Solicitar TAMV ID'} <ArrowRight aria-hidden="true" /></button><a className="button button-ghost" href="/cuenta">Ya tengo una ficha</a></div>
+    <div className="form-actions"><button className="button button-primary" type="submit" disabled={submitting || !emailVerified}>{submitting ? 'Guardando ficha…' : (initialProfile ? 'Guardar cambios de mi ficha' : 'Solicitar TAMV ID')} <ArrowRight aria-hidden="true" /></button><a className="button button-ghost" href="/cuenta">Ya tengo una ficha</a></div>
     <p className="small-note">La cuenta de identidad la gestiona Auth0. El registro TAMV y los metadatos de perfil se guardan en Supabase. La base de datos asigna el identificador; el navegador no elige ni genera el TAMV ID.</p>
   </form>;
 }
