@@ -89,7 +89,7 @@ export async function POST(request:Request) {
   if(!independenceDeclaration.declarationSubmitted) return NextResponse.json({error:"Confirma la declaración de independencia y conflicto de interés."},{status:400});
   const conflict=independenceDeclaration.hasConflict||independenceDeclaration.financialInterest||independenceDeclaration.involvedInDevelopment||independenceDeclaration.recentCollaboration||Boolean(independenceDeclaration.otherRelationship);
   if(conflict&&recommendation!=="recuse") return NextResponse.json({error:"Hay una relación declarada: debes recusarte. No envíes una puntuación sustantiva para una propuesta con conflicto."},{status:409});
-  if(recommendation==="recuse"&&!conflict&&!independenceDeclaration.otherRelationship) return NextResponse.json({error:"Si solicitas recusación, documenta la razón para evitar una revisión sin independencia."},{status:400});
+  if(recommendation==="recuse"&&!conflict&&!independenceDeclaration.otherRelationship&&rationale.trim().length<100) return NextResponse.json({error:"La recusación debe incluir una justificación."},{status:400});
 
   const rawScores=body.domainScores&&typeof body.domainScores==="object"?body.domainScores as Record<string,unknown>:{};
   const domainScores:Record<string,number>={};
