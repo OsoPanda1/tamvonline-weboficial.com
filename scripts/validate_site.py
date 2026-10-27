@@ -83,7 +83,7 @@ def local_target(page: Path, raw_url: str) -> Path | None:
 required = [
     "index.html", "catalogo.html", "recursos.html", "contribuir.html",
     "politica-editorial.html", "404.html", "favicon.svg", "site.webmanifest",
-    "robots.txt", "sitemap.xml", "vercel.json", "data/catalogo.json"
+    "robots.txt", "sitemap.xml", "vercel.json", "data/catalogo.json", "social-card.svg", "CITATION.cff", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md"
 ]
 for name in required:
     if not (ROOT / name).is_file():
@@ -143,6 +143,13 @@ if sitemap.exists():
                 errors.append(f"sitemap.xml: listed page not found locally: {loc.text}")
     except Exception as exc:
         errors.append(f"sitemap.xml: invalid XML: {exc}")
+
+citation_path = ROOT / "CITATION.cff"
+if citation_path.exists():
+    citation_text = citation_path.read_text(encoding="utf-8")
+    for required_field in ("cff-version:", "message:", "title:", "type:", "url:"):
+        if required_field not in citation_text:
+            errors.append(f"CITATION.cff: missing required field {required_field}")
 
 data_path = ROOT / "data/catalogo.json"
 if data_path.exists():
