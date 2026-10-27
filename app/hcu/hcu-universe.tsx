@@ -8,7 +8,7 @@ import {
   X, Zap,
 } from 'lucide-react';
 import {
-  hcuAtoms, hcuDomains, hcuDomainNodes, hcuHyperedges, hcuInitialNodes, hcuSources,
+  hcuDomains, hcuDomainNodes, hcuHyperedges, hcuInitialNodes, hcuSources,
   type HcuDomainId, type HcuNode,
 } from '@/lib/hcu-model';
 
@@ -140,7 +140,6 @@ export default function HcuUniverse(){
    const positions=new Map<string,Point>();
    for(const node of nodes)positions.set(node.id,projectPoint(node,nodes,width,height,rotationRef.current,zoomRef.current,year));
    positionsRef.current=positions;
-   const activeIds=new Set(nodes.filter(n=>(n.type==='atom'||n.type==='pod')&&n.domainId).map(n=>n.id));
    const drawLine=(start:Point,end:Point,color:string,alpha:number,widthLine:number)=>{
     context.save();context.globalAlpha=alpha;context.strokeStyle=color;context.lineWidth=widthLine;context.beginPath();context.moveTo(start.x,start.y);
     const bendX=(start.x+end.x)/2+(height/2-(start.y+end.y)/2)*.08;
@@ -178,7 +177,7 @@ export default function HcuUniverse(){
     const isMatched=term&&(node.label+' '+node.description+' '+node.id).toLowerCase().includes(term);
     const isRisk=viewMode==='risk'&&node.axes.risk>=.63;
     const isEvidence=viewMode==='evidence'&&node.evidenceStatus.toLowerCase().includes('fuente');
-    const fade=quarantined.length>0&&!isQuarantined&&!connectedEdges.has(node.id)?.24:1;
+    const fade=quarantined.length>0&&!isQuarantined&&!connectedEdges.has(node.id)?0.24:1;
     context.save();context.globalAlpha=fade;
     if(isSelected||isMatched||isQuarantined||isRisk){
      context.beginPath();context.arc(point.x,point.y,point.radius*(isSelected?3.4:2.6),0,Math.PI*2);
@@ -267,7 +266,6 @@ export default function HcuUniverse(){
   const anchor=document.createElement('a');anchor.href=url;anchor.download='tamv-hcu-snapshot.json';anchor.click();URL.revokeObjectURL(url);
   setLoadingExport(false);setNotice('Snapshot JSON generado desde el navegador. Contiene el modelo conceptual de esta sesión.');
  }
- const domain=nodeDomain(selected?.domainId);
  const phase=selected?((selected.axes.uncertainty*180+year*7)%360):0;
  const quarantinedCount=quarantined.length;
  return <div className="hcu-universe-root">
@@ -293,7 +291,7 @@ export default function HcuUniverse(){
      <div ref={hostRef} className="hcu-canvas-host">
       <canvas ref={canvasRef} aria-label="Universo HCU. Arrastra para rotar; selecciona una entidad para consultar su ficha." role="img" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerCancel} onWheel={onWheel}/>
       <div className="hcu-canvas-label hcu-canvas-label-top"><span className="hcu-live-pip"/>{viewMode==='hyperedges'?'RELACIONES MULTIDIMENSIONALES':viewMode==='risk'?'MAPA DE RIESGO CONCEPTUAL':viewMode==='evidence'?'PROCEDENCIA Y COBERTURA':viewMode==='pods'?'CAPA DE PODS SIMULADOS':'MAPA SISTÉMICO'} <b>{year}</b></div>
-      <div className="hcu-canvas-label hcu-canvas-label-bottom"><span>Ω CORE</span><i/ ><span>{nodes.length} nodos</span><i/ ><span>{hcuHyperedges.length} hyperedges</span><i/ ><span>Zoom {(zoomRef.current*100).toFixed(0)}%</span></div>
+      <div className="hcu-canvas-label hcu-canvas-label-bottom"><span>Ω CORE</span><i /><span>{nodes.length} nodos</span><i/ ><span>{hcuHyperedges.length} hyperedges</span><i/ ><span>Zoom {(zoomRef.current*100).toFixed(0)}%</span></div>
       <div className="hcu-axis-legend"><span><i style={{background:'#75d7f0'}}/>IA</span><span><i style={{background:'#d4b77b'}}/>Economía</span><span><i style={{background:'#bba4f6'}}/>Gobernanza</span><span><i style={{background:'#8bd6a8'}}/>Clima</span><span><i style={{background:'#f49dba'}}/>Salud</span><span><i style={{background:'#f4a575'}}/>Seguridad</span></div>
      </div>
      <div className="hcu-view-controls"><label><span>Horizonte temporal</span><strong>{year}</strong><input aria-label="Año del horizonte temporal" type="range" min={2026} max={2050} step={1} value={year} onChange={event=>setYear(Number(event.target.value))}/><small>2026 · presente de referencia <b>2050 · horizonte ilustrativo</b></small></label><label className="hcu-toggle"><input type="checkbox" checked={showLabels} onChange={event=>setShowLabels(event.target.checked)}/><span>Etiquetas en el mapa</span></label></div>
@@ -330,8 +328,4 @@ export default function HcuUniverse(){
    {helpOpen&&<div className="hcu-help-overlay" role="dialog" aria-modal="true" aria-label="Metodología del mapa HCU"><div className="hcu-help-card"><button type="button" className="hcu-help-close" onClick={()=>setHelpOpen(false)} aria-label="Cerrar explicación"><X/></button><p className="eyebrow">METODOLOGÍA Y LÍMITES</p><h2>Un mapa de preguntas, no una máquina de verdades.</h2><p>HCU toma como referencia el enfoque del World Economic Forum de interconectar asuntos complejos, pero añade un modelo explícito de estados, relaciones de varios miembros, dimensiones de riesgo e incertidumbre y puertas de evidencia inspiradas en VETRA.</p><p>En esta versión las entidades y los vínculos son una taxonomía inicial de demostración creada para explorar el diseño. No se han validado con un proceso de revisión por pares, no se alimentan en tiempo real de fuentes científicas y no deben usarse para decidir políticas, inversiones, salud, seguridad ni intervención territorial.</p><p>La etapa de investigación posterior debe asignar a cada arista una definición operacional, fuente primaria, método, fecha, responsable, confianza justificada y revisión independiente. Los cambios de escenario no son pronósticos: son controles de exploración narrativa.</p><div className="hcu-help-links">{hcuSources.map(source=><a key={source.name} href={source.url} target="_blank" rel="noopener noreferrer">{source.name} ↗</a>)}</div></div></div>}
   </section>
  </div>;
-}
-
-function nodeDomain(id:HcuDomainId|null){
- return hcuDomains.find(domain=>domain.id===id)||null;
 }
