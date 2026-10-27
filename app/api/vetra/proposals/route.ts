@@ -28,7 +28,8 @@ function dataAndSchemaReady(): boolean {
     && Boolean(process.env.TAMV_DATA_CONTROLLER_ADDRESS?.trim())
     && Boolean(process.env.TAMV_PRIVACY_CONTACT_EMAIL?.trim())
     && process.env.TAMV_VETRA_RETENTION_POLICY_APPROVED === "true"
-    && process.env.TAMV_VETRA_SCHEMA_VERIFIED === "true";
+    && process.env.TAMV_VETRA_SCHEMA_VERIFIED === "true"
+    && process.env.TAMV_VETRA_GOVERNANCE_APPROVED === "true";
 }
 function configured(): boolean {
   return process.env.TAMV_VETRA_SUBMISSIONS_ENABLED === "true" && dataAndSchemaReady();
