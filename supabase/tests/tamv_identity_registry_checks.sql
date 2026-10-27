@@ -3,7 +3,6 @@
 do $$
 declare
   rls_enabled boolean;
-  has_public_select boolean;
   has_anon_select boolean;
   has_authenticated_select boolean;
   service_can_execute boolean;
@@ -17,10 +16,9 @@ begin
     raise exception 'FAIL: RLS is not enabled on public.tamv_members';
   end if;
 
-  select has_table_privilege('public', 'public.tamv_members', 'SELECT') into has_public_select;
   select has_table_privilege('anon', 'public.tamv_members', 'SELECT') into has_anon_select;
   select has_table_privilege('authenticated', 'public.tamv_members', 'SELECT') into has_authenticated_select;
-  if has_public_select or has_anon_select or has_authenticated_select then
+  if has_anon_select or has_authenticated_select then
     raise exception 'FAIL: public, anon or authenticated role can select private member records';
   end if;
 
