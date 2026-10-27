@@ -28,6 +28,12 @@ const required = [
   "app/vetra/mis-propuestas/page.tsx",
   "app/roadmap/page.tsx",
   "app/api/vetra/proposals/route.ts",
+  "app/api/vetra/reviews/route.ts",
+  "app/api/vetra/decisions/route.ts",
+  "app/vetra/revision/page.tsx",
+  "app/vetra/revision/reviewer-console.tsx",
+  "app/vetra/decision/page.tsx",
+  "app/vetra/decision/decision-console.tsx",
   "app/api/research/search/route.ts",
   "app/api/research/audit/route.ts",
   "app/api/research/patents/route.ts",
@@ -68,6 +74,10 @@ const researchSearch = await source("app/api/research/search/route.ts");
 const researchAudit = await source("app/api/research/audit/route.ts");
 const researchPatents = await source("app/api/research/patents/route.ts");
 const vetraRoute = await source("app/api/vetra/proposals/route.ts");
+const vetraReviewRoute = await source("app/api/vetra/reviews/route.ts");
+const vetraDecisionRoute = await source("app/api/vetra/decisions/route.ts");
+const vetraReviewerPage = await source("app/vetra/revision/page.tsx");
+const vetraDecisionPage = await source("app/vetra/decision/page.tsx");
 const vetraPage = await source("app/vetra/page.tsx");
 const vetraMigration = await source("supabase/migrations/202610270003_vetra_proposals_reviews.sql");
 const vetraForm = await source("app/vetra/propuesta-form.tsx");
@@ -103,10 +113,13 @@ for (const term of ["auditHash", "Crossref", "DataCite", "OpenAlex", "saveResear
 for (const term of ["EPO_OPS_KEY", "EPO_OPS_SECRET", "link_only", "PATENTSCOPE"]) { if (!researchPatents.includes(term)) failures.push("IP audit route missing: " + term); }
 for (const term of ["enable row level security", "revoke all on table", "tamv_research_audits", "audit_hash", "evidence_snapshot"]) { if (!researchMigration.toLowerCase().includes(term.toLowerCase())) failures.push("Research audit migration missing marker: " + term); }
 for (const term of ["TAMV_VETRA_SUBMISSIONS_ENABLED", "TAMV_VETRA_RETENTION_POLICY_APPROVED", "TAMV_VETRA_SCHEMA_VERIFIED", "sameOriginRequest", "createVetraProposal", "getRecentVetraProposalCount", "getVetraProposalsForMember", "filter1IntegrityAndProvenance", "filter2MethodAndReproducibility", "filter3ResponsibleUseAndRights", "submitterAttested", "getVetraProposalsForMember"]) { if (!vetraRoute.includes(term)) failures.push("VETRA API missing security/gate control: " + term); }
-for (const term of ["tamv_vetra_proposals", "tamv_vetra_reviews", "tamv_vetra_decisions", "tamv_vetra_anonymize_on_member_delete", "enable row level security", "revoke all on table", "conflict_checks_complete", "appeal_window_days"]) { if (!vetraMigration.toLowerCase().includes(term.toLowerCase())) failures.push("VETRA migration missing schema/security marker: " + term); }
+for (const term of ["tamv_vetra_proposals", "tamv_vetra_reviews", "tamv_vetra_decisions", "tamv_vetra_anonymize_on_member_delete", "tamv_vetra_submit_proposal", "tamv_vetra_finalize_decision", "pg_advisory_xact_lock", "enable row level security", "revoke all on table", "conflict_checks_complete", "appeal_window_days"]) { if (!vetraMigration.toLowerCase().includes(term.toLowerCase())) failures.push("VETRA migration missing schema/security marker: " + term); }
 for (const term of ["filter1IntegrityAndProvenance", "filter2MethodAndReproducibility", "filter3ResponsibleUseAndRights", "Descargar borrador JSON", "no se ha enviado al servidor"]) { if (!vetraForm.includes(term)) failures.push("VETRA client intake missing user-facing gate or draft behavior: " + term); }
 if (!vetraPage.includes("VETRA Ω∞") || !vetraPage.includes("submissionConfiguration")) failures.push("VETRA public page missing canonical title or submission status.");
-if (!envExample.includes("TAMV_VETRA_SUBMISSIONS_ENABLED=false") || !envExample.includes("TAMV_VETRA_RETENTION_POLICY_APPROVED=false") || !envExample.includes("TAMV_VETRA_SCHEMA_VERIFIED=false")) failures.push("VETRA launch flags must default to false.");
+for (const term of ["TAMV_VETRA_REVIEW_CONSOLE_ENABLED", "TAMV_VETRA_REVIEWER_EMAILS", "hasConflict", "financialInterest", "involvedInDevelopment", "recentCollaboration", "saveVetraReview", "sameOriginRequest"]) { if (!vetraReviewRoute.includes(term)) failures.push("VETRA reviewer endpoint missing access/conflict control: " + term); }
+for (const term of ["TAMV_VETRA_DECISION_CONSOLE_ENABLED", "TAMV_VETRA_DECISION_EMAILS", "getVetraLatestReviewsForDecision", "criticalFailures", "accepted_with_conditions", "sameOriginRequest"]) { if (!vetraDecisionRoute.includes(term)) failures.push("VETRA decision endpoint missing control: " + term); }
+if (!vetraReviewerPage.includes("TAMV_VETRA_REVIEWER_EMAILS") || !vetraDecisionPage.includes("TAMV_VETRA_DECISION_EMAILS")) failures.push("VETRA privileged pages must enforce separate email allowlists.");
+if (!envExample.includes("TAMV_VETRA_SUBMISSIONS_ENABLED=false") || !envExample.includes("TAMV_VETRA_RETENTION_POLICY_APPROVED=false") || !envExample.includes("TAMV_VETRA_SCHEMA_VERIFIED=false") || !envExample.includes("TAMV_VETRA_GOVERNANCE_APPROVED=false") || !envExample.includes("TAMV_VETRA_REVIEW_CONSOLE_ENABLED=false") || !envExample.includes("TAMV_VETRA_DECISION_CONSOLE_ENABLED=false")) failures.push("VETRA launch flags must default to false.");
 if (/NEXT_PUBLIC_SUPABASE_(SERVICE_ROLE|SECRET)/i.test(supabase + register + envExample)) failures.push("A Supabase administrative key must never use a NEXT_PUBLIC_ variable.");
 if (!privacy.includes("TAMV_DATA_CONTROLLER_ADDRESS") || !register.includes("TAMV_PRIVACY_CONTACT_EMAIL")) failures.push("Privacy launch gate is missing controller/address/contact checks.");
 if (!workflow.includes("pnpm validate:app") || !workflow.includes("pnpm typecheck") || !workflow.includes("pnpm build")) failures.push("GitHub Actions is missing one or more application quality gates.");
