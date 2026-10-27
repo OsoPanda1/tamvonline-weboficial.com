@@ -250,3 +250,14 @@ export async function createVetraProposal(input: VetraProposalSubmission): Promi
   }
   return rows[0];
 }
+
+
+export async function getRecentVetraProposalCount(tamvId: string, hours = 24): Promise<number> {
+  if (!/^TAMV-[0-9A-F]{26}$/.test(tamvId)) throw new Error("Invalid TAMV member identifier.");
+  const windowHours = Math.min(168, Math.max(1, Math.floor(hours)));
+  const since = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
+  const rows = await supabaseFetch<Array<{ id: string }>>(
+    `tamv_vetra_proposals?select=id&submitted_by_tamv_id=eq.${encodeURIComponent(tamvId)}&created_at=gte.${encodeURIComponent(since)}&limit=4`,
+  );
+  return Array.isArray(rows) ? rows.length : 0;
+}
