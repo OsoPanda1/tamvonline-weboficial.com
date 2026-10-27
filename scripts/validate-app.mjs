@@ -84,6 +84,7 @@ const registrationForm = await source("app/registro/registration-form.tsx");
 const hcuPage = await source("app/hcu/page.tsx");
 const hcuComponent = await source("app/hcu/hcu-universe.tsx");
 const hcuModel = await source("lib/hcu-model.ts");
+const sourceHeader = await source("app/components/site-header.tsx");
 const memberDirectory = await source("app/miembros/page.tsx");
 const memberDirectoryClient = await source("app/miembros/member-directory.tsx");
 const orcidConnect = await source("app/api/orcid/connect/route.ts");
@@ -153,7 +154,8 @@ if (!hcuPage.includes("HcuUniverse") || !hcuPage.includes("/vetra")) failures.pu
 for (const term of ["getPublicMembers", "MemberDirectory", "profiles.length"]) { if (!memberDirectory.includes(term)) failures.push("Public member directory missing data/empty-state marker: " + term); }
 for (const term of ["profile.research_areas", "profile.identifiers", "safeExternalUrl", "No hay resultados", "clearFilters"]) { if (!memberDirectoryClient.includes(term)) failures.push("Member directory missing discovery/privacy marker: " + term); }
 for (const term of ["membership_status=eq.approved", "profile_visibility=eq.public", "public_profile_consent=eq.true", "verification_status=eq.verified"]) { if (!supabase.includes(term)) failures.push("Public member lookup missing approval/consent/verified-identifier gate: " + term); }
-if (!required.includes("app/miembros/page.tsx") || !required.includes("app/miembros/member-directory.tsx")) failures.push("Member directory must be included in static checks.");
+if (!required.includes("app/miembros/page.tsx") || !required.includes("app/miembros/member-directory.tsx") || !required.includes("app/components/site-header.tsx")) failures.push("Member directory and shared navigation must be included in static checks.");
+if (!sourceHeader.includes("href:'/miembros'")) failures.push("Shared navigation must expose the public member directory.");
 for (const term of ["AUTH0_GITHUB_CONNECTION", "AUTH0_ORCID_CONNECTION", "code_challenge_method", "safeReturnTo", "nonce"]) { if (!authLogin.includes(term)) failures.push("Auth0 provider login missing connection/security marker: " + term); }
 for (const term of ["githubConnectionAvailable", "orcidConnectionAvailable", "orcidOAuthConfigured", "registrationEnabled", "pendingOrcid", "provider-unavailable", "Crear cuenta con correo"]) { if (!registrationForm.includes(term)) failures.push("Registration UI missing provider configuration/availability marker: " + term); }
 for (const term of ["https://orcid.org/oauth/authorize", "/authenticate", "state", "auth0Sub", "mode", "sealPayload", "cookieOptions"]) { if (!orcidConnect.includes(term)) failures.push("ORCID connect route missing OAuth security/scope marker: " + term); }
