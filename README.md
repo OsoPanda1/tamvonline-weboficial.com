@@ -19,6 +19,16 @@ Sitio estático para presentar la identidad pública de TAMV Online Network, org
 - `scripts/validate_site.py`: comprobaciones estáticas sin dependencias externas.
 - `.github/workflows/site-quality.yml`: validación automática en push y pull request.
 
+## Gobernanza y citación del repositorio
+
+- `social-card.svg`: tarjeta SVG para previsualizaciones sociales.
+- `CITATION.cff`: metadatos de citación del sitio como software; no inventa versión ni DOI.
+- `CONTRIBUTING.md`: cómo proponer cambios verificables.
+- `CODE_OF_CONDUCT.md`: expectativas iniciales de colaboración respetuosa.
+- `SECURITY.md`: orientación para reportar vulnerabilidades sin publicar detalles sensibles.
+
+Estos documentos son políticas iniciales del repositorio. No implican que exista una estructura jurídica, un equipo editorial formal o un canal de respuesta con SLA establecido.
+
 ## Tecnología
 
 HTML, CSS y JavaScript nativos; no se declara un paso de compilación ni dependencias de frontend. Búsqueda y filtros del directorio y del catálogo se ejecutan en el navegador. No hay backend de cuentas, comentarios, suscripciones ni formularios; no se deben anunciar como existentes hasta que se implementen y prueben.
