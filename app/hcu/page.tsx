@@ -11,7 +11,6 @@ export const metadata={
 };
 
 export default async function HcuPage(){
- const session=await currentServerSession();
  return <main className="site-shell hcu-site-shell">
   <div className="utility-strip"><span>TAMV Ω∞ HCU</span><span>TRANSFORMATION INTELLIGENCE / 2026–2050</span><span>ESTADO: PROTOTIPO CONCEPTUAL INTERACTIVO</span></div>
   <SiteHeader active="/hcu" />
