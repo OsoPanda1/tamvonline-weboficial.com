@@ -280,7 +280,7 @@ grant select, insert, update, delete on table public.tamv_members to service_rol
 grant select, insert, update, delete on table public.tamv_member_identifiers to service_role;
 
 revoke all on function public.tamv_register_member(text,text,boolean,boolean,text,text,text,text,text[],text,boolean,text,text,jsonb) from public, anon, authenticated;
-grant execute on function public.tamv_register_member(text,text,boolean,text,text,text,text,text[],text,boolean,text,text,jsonb) to service_role;
+grant execute on function public.tamv_register_member(text,text,boolean,boolean,text,text,text,text,text[],text,boolean,text,text,jsonb) to service_role;
 revoke all on function public.tamv_delete_member(text) from public, anon, authenticated;
 grant execute on function public.tamv_delete_member(text) to service_role;
 
