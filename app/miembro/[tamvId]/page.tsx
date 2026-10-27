@@ -13,7 +13,7 @@ export default async function PublicMemberPage({ params }: { params: Promise<{ t
   const { tamvId: rawId } = await params;
   const tamvId = rawId.toUpperCase();
   if (!/^TAMV-[0-9A-F]{26}$/.test(tamvId)) notFound();
-  let member;
+  let member: Awaited<ReturnType<typeof getPublicMember>> = null;
   let unavailable = false;
   try { member = await getPublicMember(tamvId); }
   catch (error) {
