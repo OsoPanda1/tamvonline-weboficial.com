@@ -1,6 +1,6 @@
 # TAMV Online Network — Institutional Research Platform
 
-A Next.js App Router site for TAMV Online Network, with a documented institutional profile, public research catalogue, member identity registry (TAMV ID), research metadata discovery and a preliminary intellectual-property workflow.
+A Next.js App Router site for TAMV Online Network, with a documented institutional profile, VETRA Ω∞ proposal screening and governance framework, institutional roadmap, public research catalogue, member identity registry (TAMV ID), research metadata discovery and a preliminary intellectual-property workflow.
 
 > **Evidence policy:** a website, identifier, DOI, repository entry, citation count or patent search result does not by itself prove peer review, technical function, organizational eligibility, patentability, authorship ownership, commercial value or legal compliance. Each claim must keep its source and scope.
 
@@ -13,6 +13,9 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - DOI metadata audit: compares Crossref, DataCite and OpenAlex records, returns per-provider states, shows missing metadata and calculates an evidence-readiness/transfer-triage score.
 - IP discovery: EPO Open Patent Services searches when server-side credentials are configured, plus official manual links to USPTO, WIPO PATENTSCOPE, Espacenet and Google Patents.
 - Optional provenance snapshots: SHA-256 of the exact generated DOI-audit JSON and optional persistence in Supabase for a registered TAMV member.
+- VETRA Ω∞: three mandatory gates (integrity/provenance; method/reproducibility; responsibility/rights/impact), fourteen evaluation domains, human review, conflict declarations, appeals and an institutional roadmap.
+- VETRA proposal intake: server-side validation and private Supabase tables for proposals, reviews and decisions. The intake is disabled until the migration, privacy/retention policy and governance are approved.
+- Executive brief, canonical VETRA regulations, quantitative metrics/use cases, technical English foundations and roadmap documents.
 - Automated source checks and production build through GitHub Actions.
 
 ## Stack
@@ -36,9 +39,16 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - lib/supabase-rest.ts: server-only Supabase access, member registry and research snapshot persistence.
 - supabase/migrations/202610270001_tamv_identity_registry.sql: TAMV ID/member/identifier tables.
 - supabase/migrations/202610270002_research_audit_snapshots.sql: private research audit snapshots.
-- supabase/tests/tamv_identity_registry_checks.sql: read-only checks of member-table RLS and grants.
+- supabase/migrations/202610270003_vetra_proposals_reviews.sql: private VETRA proposals, reviewer assessments and human decisions.
+- supabase/tests/vetra_review_security_checks.sql: read-only grants/RLS checks for VETRA tables.
+- supabase/tests/tamv_identity_registry_checks.sql and supabase/tests/vetra_review_security_checks.sql: read-only checks of member-table RLS and grants.
 - docs/tamv-id-runbook.md: Auth0, Supabase and TAMV ID setup.
 - docs/research-audit-api-map.md: connector/API map, data access limits, evidence-scoring weights and IP boundaries.
+- docs/vetra-executive-brief.md: executive brief and governance decision requested.
+- docs/CANON-VETRA-OMEGA-INFINITY-2026-V1.0.md: canonical regulations and the three-gate framework.
+- docs/vetra-metrics-and-use-cases.md: scoring rubric, process metrics and AI use cases.
+- docs/vetra-foundations-en.md: technical English translation of the philosophical foundations.
+- docs/roadmap-institutional-2026-2028.md: phased institutional and commercial roadmap.
 - .env.example: variable names and safe configuration notes, without real credentials.
 - .github/workflows/site-quality.yml: static validation, TypeScript and build gates.
 
@@ -79,6 +89,7 @@ Apply migrations in order to the correct Supabase project:
 
 1. supabase/migrations/202610270001_tamv_identity_registry.sql
 2. supabase/migrations/202610270002_research_audit_snapshots.sql
+3. supabase/migrations/202610270003_vetra_proposals_reviews.sql
 
 Then run the repository's Supabase read-only security check using the SQL Editor or an authorized CLI connection:
 
@@ -86,7 +97,7 @@ supabase/tests/tamv_identity_registry_checks.sql
 
 The application uses a server-only key. Never expose SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY via NEXT_PUBLIC_*, client components, browser requests or commits.
 
-Research audit persistence remains disabled by default. Set TAMV_RESEARCH_AUDIT_PERSISTENCE_ENABLED=true only after migration 002 is applied, RLS/grants are verified and the retention/access policy has been reviewed. A GitHub commit does not apply migrations to the external Supabase database.
+Research audit persistence and VETRA proposal intake remain disabled by default. Enable `TAMV_VETRA_SUBMISSIONS_ENABLED=true` only after migration 003 is applied, RLS/grants are verified, VETRA's privacy/retention policy is approved, and the committee/appeal process is documented. Set TAMV_RESEARCH_AUDIT_PERSISTENCE_ENABLED=true only after migration 002 is applied, RLS/grants are verified and the retention/access policy has been reviewed. A GitHub commit does not apply migrations to the external Supabase database.
 
 ## Auth0 and optional EPO setup
 
@@ -116,6 +127,16 @@ This is an **evidence-readiness/next-actions index**. It is not a scientific qua
 - Review patent status and rights in official registers and involve qualified counsel before legal, filing, investment or shipping decisions.
 - Privacy notice and registration remain subject to actual controller/contact configuration and legal review.
 - The presence of TAMV Online Network or its documents does not prove legal personality, external institutional recognition, ROR eligibility, peer review or independent endorsement.
+
+## VETRA Ω∞ proposal review
+
+VETRA is an internal pilot framework, not an accredited certification body. Proposal intake has three gates: (1) integrity and provenance, (2) method and reproducibility, and (3) responsibility, rights, security and impact. A self-declaration is not a review result. Critical failures cannot be compensated by an aggregate score; all substantive decisions require accountable human review. Payment or membership tier never purchases a favorable assessment.
+
+Review policies, weights and proposed thresholds are versioned in the VETRA documents. Numeric thresholds are pilot hypotheses and require calibration before use for high-impact decisions. Seven human reviewers and fourteen AI support agents are a future design target, not a claim that those positions are currently staffed. No VETRA certification seal should be represented as externally accredited.
+
+### VETRA intake activation gate
+
+The form exports a local JSON draft when submissions are closed. Server submission is enabled only with the `TAMV_VETRA_SUBMISSIONS_ENABLED=true` environment variable, confirmed data-controller/privacy-contact values, `TAMV_VETRA_RETENTION_POLICY_APPROVED=true`, configured server-only Supabase keys and migration 003 applied and tested. Setting the environment flag does not itself confirm a migration has been run.
 
 ## ROR preparation
 
