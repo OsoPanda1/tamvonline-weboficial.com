@@ -404,3 +404,30 @@ export async function createVetraDecision(input:{
   void patch;
   return rows[0];
 }
+
+
+export async function getVetraProposalStatus(proposalId:string):Promise<{id:string;status:string}|null> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(proposalId)) throw new Error("Invalid VETRA proposal identifier.");
+  const rows=await supabaseFetch<Array<{id:string;status:string}>>(
+    `tamv_vetra_proposals?select=id,status&id=eq.${encodeURIComponent(proposalId)}&limit=1`,
+  );
+  return Array.isArray(rows)?rows[0]||null:null;
+}
+
+export async function getVetraLatestReviewsForDecision(proposalId:string):Promise<VetraReviewForDecision[]> {
+  const rows=await getVetraReviewsForProposal(proposalId);
+  const latest=new Map<string,VetraReviewForDecision>();
+  for (const row of rows) {
+    if (!row.reviewer_tamv_id) continue;
+    if (!latest.has(row.reviewer_tamv_id)) latest.set(row.reviewer_tamv_id,row);
+  }
+  return Array.from(latest.values());
+}
+
+export async function markVetraProposalInReview(proposalId:string):Promise<void> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(proposalId)) throw new Error("Invalid VETRA proposal identifier.");
+  await supabaseFetch<unknown>(
+    `tamv_vetra_proposals?id=eq.${encodeURIComponent(proposalId)}&status=in.(received,administrative_screening)`,
+    {method:"PATCH",headers:{prefer:"return=minimal"},body:JSON.stringify({status:"independent_review",updated_at:new Date().toISOString()})},
+  );
+}
