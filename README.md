@@ -73,9 +73,11 @@ Prerequisites: Node.js 22 and pnpm 12.3.4 (aligned with the repository's package
 
 Run pnpm install --frozen-lockfile, then pnpm dev.
 
-Quality checks: pnpm validate:app, pnpm typecheck and pnpm build.
+Quality checks: `pnpm validate:site`, `pnpm validate:app`, `pnpm typecheck` and `pnpm build`.
 
-The static App validator is source inspection, not a runtime/API test. Browser workflows, external API behavior, legal review and production deployment must be checked separately. Auth0 GitHub connections and ORCID OAuth credentials require configuration in their respective provider portals; no credentials are committed.
+After a successful build, start the production server in one terminal with `pnpm start -- --hostname 127.0.0.1 --port 3210`; in a second terminal run `SMOKE_BASE_URL=http://127.0.0.1:3210 pnpm smoke:routes`. The smoke suite checks public route responses, the legacy directory redirect and unauthenticated VETRA access. CI includes this step after the production build.
+
+Static source checks and HTTP smoke tests are not a substitute for a browser-based end-to-end, accessibility, load, penetration, legal/privacy or live provider audit. At the time of this revision, GitHub Actions is failing before recording any job steps and Vercel reports a build-rate-limit failure; this repository's new build and smoke checks have therefore **not been confirmed to pass**. Auth0 GitHub connections and ORCID OAuth credentials require configuration in their respective provider portals; no credentials are committed.
 
 ## Public research API connectors
 
