@@ -144,3 +144,38 @@ export async function deleteTamvMember(auth0Sub: string): Promise<string | null>
   });
   return rows[0]?.tamv_id || null;
 }
+
+
+export type ResearchAuditSnapshotInput = {
+  tamvId: string;
+  auditType: "doi_metadata" | "research_record" | "ip_landscape";
+  subject: string;
+  auditHash: string;
+  engineVersion: string;
+  sourceStatus: unknown;
+  snapshot: unknown;
+};
+
+export async function saveResearchAuditSnapshot(input: ResearchAuditSnapshotInput): Promise<{ id: string; audit_hash: string; created_at: string }> {
+  if (!/^TAMV-[0-9A-F]{26}$/.test(input.tamvId)) throw new Error("Invalid member reference.");
+  if (!/^[0-9a-f]{64}$/.test(input.auditHash)) throw new Error("Invalid audit hash.");
+  if (JSON.stringify(input.snapshot).length > 120_000) throw new Error("Audit snapshot exceeds the configured limit.");
+  const rows = await supabaseFetch<Array<{ id: string; audit_hash: string; created_at: string }>>(
+    "tamv_research_audits?select=id,audit_hash,created_at",
+    {
+      method: "POST",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({
+        created_by_tamv_id: input.tamvId,
+        audit_type: input.auditType,
+        subject: input.subject.slice(0, 255),
+        audit_hash: input.auditHash,
+        engine_version: input.engineVersion,
+        source_status: input.sourceStatus,
+        evidence_snapshot: input.snapshot,
+      }),
+    },
+  );
+  if (!Array.isArray(rows) || !rows[0]?.id) throw new Error("Supabase did not return the saved audit record.");
+  return rows[0];
+}
