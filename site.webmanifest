@@ -1,0 +1,19 @@
+{
+  "name": "TAMV Online Network",
+  "short_name": "TAMV",
+  "description": "Investigación independiente, tecnología y memoria viva.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050a12",
+  "theme_color": "#050a12",
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any monochrome"
+    }
+  ]
+}
