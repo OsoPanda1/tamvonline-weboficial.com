@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readSessionFromCookie, sameOriginRequest, sessionCookieName } from "@/lib/auth0-native";
-import { createVetraProposal, getMemberByAuth0Sub, SupabaseConfigurationError } from "@/lib/supabase-rest";
+import { createVetraProposal, getMemberByAuth0Sub, getRecentVetraProposalCount, SupabaseConfigurationError } from "@/lib/supabase-rest";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   let body: Record<string, unknown>;
   try {
     const raw = await request.text();
-    if (raw.length > 26_000) return NextResponse.json({ error: "La propuesta excede el límite de tamaño." }, { status: 413 });
+    if (raw.length > 40_000) return NextResponse.json({ error: "La propuesta excede el límite de tamaño." }, { status: 413 });
     body = JSON.parse(raw) as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: "El cuerpo de la propuesta debe ser JSON válido." }, { status: 400 });
@@ -88,6 +88,8 @@ export async function POST(request: Request) {
   ];
   const missing = requiredFields.find(([,value,min]) => value.length < min);
   if (missing) return NextResponse.json({ error: "Falta desarrollar un campo obligatorio: " + missing[0] + "." }, { status: 400 });
+  const textBytes = [abstract,problemStatement,contributionClaim,methodology,reproducibilityPlan,ethicsAndHarm,privacyAndData,securityPlan,rightsAndIp,sustainabilityPlan,fundingAndConflicts].reduce((sum,value)=>sum+Buffer.byteLength(value,"utf8"),0);
+  if (textBytes > 28_000) return NextResponse.json({ error: "El texto total supera el límite conjunto de 28 KB. Resume la propuesta y conserva la evidencia esencial." }, { status: 413 });
   if (!submitterAttested) return NextResponse.json({ error: "Debes confirmar la autoría, veracidad de declaraciones y uso legítimo de materiales." }, { status: 400 });
 
   const filterDeclarations = {
@@ -100,7 +102,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Confirma los tres filtros y comprende que las declaraciones no equivalen a una aprobación." }, { status: 400 });
   }
 
-  const rawSources = Array.isArray(body.sourcesAndArtifacts) ? body.sourcesAndArtifacts.slice(0, 20) : [];
+  if (body.sourcesAndArtifacts !== undefined && !Array.isArray(body.sourcesAndArtifacts)) return NextResponse.json({ error: "Las referencias deben enviarse como una lista." }, { status: 400 });
+  const rawSources = Array.isArray(body.sourcesAndArtifacts) ? body.sourcesAndArtifacts : [];
+  if (rawSources.length > 20) return NextResponse.json({ error: "Se permiten hasta 20 referencias externas." }, { status: 400 });
   const sourcesAndArtifacts: Array<{label:string;url:string}> = [];
   for (const raw of rawSources) {
     if (!raw || typeof raw !== "object") return NextResponse.json({ error: "Referencia externa inválida." }, { status: 400 });
@@ -117,6 +121,8 @@ export async function POST(request: Request) {
     if (!member.email_verified || member.membership_status === "suspended" || member.membership_status === "rejected") {
       return NextResponse.json({ error: "Tu ficha no cumple las condiciones de acceso al formulario VETRA." }, { status: 403 });
     }
+    const recentCount = await getRecentVetraProposalCount(member.tamv_id, 24);
+    if (recentCount >= 3) return NextResponse.json({ error: "Se admiten como máximo tres propuestas por TAMV ID en 24 horas. Guarda el borrador y vuelve a intentarlo después del periodo de control." }, { status: 429, headers: { "cache-control": "no-store" } });
     const proposal = await createVetraProposal({
       submittedByTamvId: member.tamv_id,
       submitterDisplayName: member.display_name || text(session.name, 120) || "Miembro TAMV",
