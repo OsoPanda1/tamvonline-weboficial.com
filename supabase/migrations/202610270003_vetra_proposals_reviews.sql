@@ -126,4 +126,131 @@ create trigger tamv_vetra_member_delete_anonymize
 before delete on public.tamv_members
 for each row execute function public.tamv_vetra_anonymize_on_member_delete();
 
+
+-- Atomic human decision: require three distinct non-recused reviewers and coverage of all 14 domains.
+create or replace function public.tamv_vetra_finalize_decision(
+  p_proposal_id uuid,
+  p_decision_status text,
+  p_quorum_size integer,
+  p_conflict_checks_complete boolean,
+  p_decision_rationale text,
+  p_conditions jsonb,
+  p_appeal_window_days integer,
+  p_decided_by_tamv_id text,
+  p_policy_version text
+)
+returns table(id uuid, proposal_id uuid, decision_status text, created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+declare
+  v_review_count integer;
+  v_domain text;
+  v_critical boolean;
+  v_decision_id uuid;
+  v_created_at timestamptz;
+begin
+  if p_decision_status not in ('minor_revision','major_revision','accepted_with_conditions','rejected','suspended','withdrawn') then
+    raise exception 'Invalid VETRA decision status';
+  end if;
+  if p_conflict_checks_complete is not true then
+    raise exception 'Conflict-of-interest checks must be completed before a VETRA decision';
+  end if;
+  if p_quorum_size < 3 or p_quorum_size > 30 then
+    raise exception 'VETRA decision requires at least three independent reviewers';
+  end if;
+  if length(btrim(coalesce(p_decision_rationale,''))) < 100 or length(p_decision_rationale) > 8000 then
+    raise exception 'Decision rationale must contain 100 to 8000 characters';
+  end if;
+  if jsonb_typeof(coalesce(p_conditions,'[]'::jsonb)) <> 'array' or jsonb_array_length(coalesce(p_conditions,'[]'::jsonb)) > 40 then
+    raise exception 'Invalid VETRA decision conditions';
+  end if;
+  if p_appeal_window_days < 0 or p_appeal_window_days > 180 then
+    raise exception 'Appeal window must be between 0 and 180 days';
+  end if;
+
+  perform 1 from public.tamv_vetra_proposals where tamv_vetra_proposals.id=p_proposal_id for update;
+  if not found then raise exception 'VETRA proposal not found'; end if;
+
+  with latest_reviews as (
+    select distinct on (reviewer_tamv_id) reviewer_tamv_id, recommendation, independence_declaration, domain_scores
+      from public.tamv_vetra_reviews
+      where tamv_vetra_reviews.proposal_id=p_proposal_id and reviewer_tamv_id is not null
+      order by reviewer_tamv_id, created_at desc
+  )
+  select count(*) into v_review_count from latest_reviews
+   where recommendation <> 'recuse'
+     and coalesce((independence_declaration->>'hasConflict')::boolean,false)=false
+     and coalesce((independence_declaration->>'financialInterest')::boolean,false)=false
+     and coalesce((independence_declaration->>'involvedInDevelopment')::boolean,false)=false
+     and coalesce((independence_declaration->>'recentCollaboration')::boolean,false)=false
+     and coalesce(nullif(btrim(independence_declaration->>'otherRelationship'),''),'')='';
+
+  if v_review_count < 3 then
+    raise exception 'At least three distinct non-recused reviewers with clear conflict declarations are required';
+  end if;
+  if p_quorum_size <> v_review_count then
+    raise exception 'Declared quorum does not match the number of eligible distinct reviewers';
+  end if;
+
+  foreach v_domain in array array[
+    'scientificValidity','technicalRobustness','security','privacy','ethics','reproducibility',
+    'governance','socialImpact','economicViability','scientificIntegrity','cognitiveReliability',
+    'metaEvaluation','evidenceProvenance','futureConsequences'
+  ]
+  loop
+    with latest_reviews as (
+      select distinct on (reviewer_tamv_id) reviewer_tamv_id, recommendation, domain_scores
+        from public.tamv_vetra_reviews
+        where tamv_vetra_reviews.proposal_id=p_proposal_id and reviewer_tamv_id is not null
+        order by reviewer_tamv_id, created_at desc
+    )
+    select exists(
+      select 1 from latest_reviews
+       where recommendation <> 'recuse'
+         and coalesce(domain_scores->'scores','{}'::jsonb) ? v_domain
+    ) into v_critical;
+    if not v_critical then
+      raise exception 'No eligible review covers required domain %', v_domain;
+    end if;
+  end loop;
+
+  with latest_reviews as (
+    select distinct on (reviewer_tamv_id) reviewer_tamv_id, recommendation, domain_scores
+      from public.tamv_vetra_reviews
+      where tamv_vetra_reviews.proposal_id=p_proposal_id and reviewer_tamv_id is not null
+      order by reviewer_tamv_id, created_at desc
+  )
+  select exists(
+    select 1 from latest_reviews
+     where recommendation <> 'recuse'
+       and jsonb_typeof(coalesce(domain_scores->'criticalFailures','[]'::jsonb))='array'
+       and jsonb_array_length(coalesce(domain_scores->'criticalFailures','[]'::jsonb)) > 0
+  ) into v_critical;
+
+  if p_decision_status='accepted_with_conditions' and v_critical then
+    raise exception 'A proposal with unresolved critical failures cannot be accepted';
+  end if;
+
+  insert into public.tamv_vetra_decisions(
+    proposal_id,decision_status,quorum_size,conflict_checks_complete,decision_rationale,
+    conditions,appeal_window_days,decided_by_tamv_id,policy_version
+  ) values (
+    p_proposal_id,p_decision_status,v_review_count,true,p_decision_rationale,
+    coalesce(p_conditions,'[]'::jsonb),p_appeal_window_days,p_decided_by_tamv_id,
+    coalesce(nullif(p_policy_version,''),'CANON-VETRA-OMEGA-INFINITY-2026-V1.0')
+  ) returning tamv_vetra_decisions.id, tamv_vetra_decisions.created_at into v_decision_id,v_created_at;
+
+  update public.tamv_vetra_proposals
+    set status=p_decision_status, reviewed_at=v_created_at, updated_at=v_created_at
+    where tamv_vetra_proposals.id=p_proposal_id;
+
+  return query select v_decision_id,p_proposal_id,p_decision_status,v_created_at;
+end;
+$;
+
+revoke all on function public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text) from public, anon, authenticated;
+grant execute on function public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text) to service_role;
+
 commit;
