@@ -8,6 +8,7 @@ type OpenAlexResponse = { results?: Array<Record<string, unknown>> };
 type CrossrefResponse = { message?: { items?: Array<Record<string, unknown>> } };
 type DataCiteResponse = { data?: Array<{ id?: string; attributes?: Record<string, unknown> }> };
 type RorResponse = { items?: Array<Record<string, unknown>> };
+type OpenAireResponse = { results?: Array<Record<string, unknown>>; header?: Record<string, unknown> };
 
 function cap(value: unknown, max = 240): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -127,6 +128,62 @@ async function searchDataCite(q: string): Promise<{ items: ResearchItem[]; state
   return { items, state: { id: "datacite", name: "DataCite", status: items.length ? "ok" : "empty", count: items.length, note: "Incluye conjuntos de datos, software y otros productos; solo expone estados Findable en API pública." } };
 }
 
+async function searchOpenAire(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
+  const url = new URL("https://api.openaire.eu/graph/v4/research-products");
+  url.searchParams.set("search", q);
+  url.searchParams.set("page_size", "8");
+  if (process.env.TAMV_CONTACT_EMAIL) url.searchParams.set("mailto", process.env.TAMV_CONTACT_EMAIL);
+  const response = await fetchJson<OpenAireResponse>(url.toString(), {
+    headers: { "user-agent": `TAMV-Research-Audit/1.0 (https://tamv.online; mailto:${process.env.TAMV_CONTACT_EMAIL || "contact@example.invalid"})` },
+  });
+  if (!response.ok || !response.data) {
+    return { items: [], state: { id: "openaire", name: "OpenAIRE Graph", status: "unavailable", count: 0, note: response.error } };
+  }
+  const rows = arr(response.data.results);
+  const items = rows.flatMap((value) => {
+    const row = value as Record<string, unknown>;
+    const title = cap(row.mainTitle || row.title || row.titleText, 600);
+    if (!title) return [];
+    const ids = arr(row.pids || row.identifiers || row.ids);
+    const doiEntry = ids.find((entry) => {
+      const x = entry as Record<string, unknown>;
+      return /doi/i.test(cap(x.scheme || x.type || x.identifierType));
+    }) as Record<string, unknown> | undefined;
+    const doiRaw = cap(row.doi || doiEntry?.value || doiEntry?.identifier);
+    const doi = doiRaw.replace(/^https?:\/\/doi\.org\//i, "") || null;
+    const rawAuthors = arr(row.authors || row.authorships);
+    const authors = rawAuthors.flatMap((value) => {
+      const a = value as Record<string, unknown>;
+      const nested = (a.author || a.person || a.creator) as Record<string, unknown> | undefined;
+      const name = cap(a.fullName || a.fullname || a.name || nested?.fullName || nested?.name ||
+        [cap(a.givenName, 70), cap(a.familyName, 90)].filter(Boolean).join(" "), 120);
+      return name ? [name] : [];
+    });
+    const year = yearFromDate(row.publicationDate || row.date || row.publicationYear);
+    const publisher = cap(row.publisher || row.venue || row.sourceTitle);
+    const resourceType = cap(row.publicationType || row.type);
+    const openAireId = cap(row.id);
+    const urlForItem = safeExternalUrl(row.url || row.landingPage || row.websiteUrl,
+      doi ? `https://doi.org/${doi}` : openAireId ? `https://explore.openaire.eu/search/publication?pid=${encodeURIComponent(openAireId)}` : `https://explore.openaire.eu/search/publication?search=${encodeURIComponent(q)}`);
+    const normalized = metadataResult({
+      id: `openaire:${doi || openAireId || title}`, provider: "OpenAIRE Graph", title,
+      url: urlForItem, doi, year, authors, venue: publisher || null,
+      resourceType: resourceType || null,
+      openAccess: typeof row.isOpenAccess === "boolean" ? row.isOpenAccess : null,
+      evidenceClass: "Metadatos agregados por OpenAIRE Graph; el registro y su estado de acceso no certifican revisión por pares ni validez científica.",
+    });
+    return normalized ? [normalized] : [];
+  });
+  const total = Number((response.data.header as Record<string, unknown> | undefined)?.numFound);
+  return {
+    items,
+    state: {
+      id: "openaire", name: "OpenAIRE Graph", status: items.length ? "ok" : "empty", count: items.length,
+      note: `Grafo público de productos de investigación; ${Number.isFinite(total) ? total : "cantidad total no reportada"} resultados reportados por el proveedor, máximo 8 consultados por petición.`,
+    },
+  };
+}
+
 async function searchRor(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
   const url = new URL("https://api.ror.org/v2/organizations");
   url.searchParams.set("query", q);
@@ -161,7 +218,7 @@ export async function POST(request: Request) {
   const type = body.type === "organizations" ? "organizations" : "research";
   const results = type === "organizations"
     ? [await searchRor(query)]
-    : await Promise.all([searchOpenAlex(query), searchCrossref(query), searchDataCite(query)]);
+    : await Promise.all([searchOpenAlex(query), searchCrossref(query), searchDataCite(query), searchOpenAire(query)]);
   const combined = results.flatMap((x) => x.items).slice(0, 30);
   const unique = new Map<string, ResearchItem>();
   for (const item of combined) {
@@ -176,6 +233,9 @@ export async function POST(request: Request) {
       googleScholar: `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}`,
       openAlex: `https://openalex.org/works?search=${encodeURIComponent(query)}`,
       arxiv: `https://arxiv.org/search/?query=${encodeURIComponent(query)}&searchtype=all`,
+      openAire: `https://explore.openaire.eu/search/publication?search=${encodeURIComponent(query)}`,
+      dimensions: `https://app.dimensions.ai/discover/publication?search_text=${encodeURIComponent(query)}`,
+      pubmed: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(query)}`,
     },
   }, { headers: { "cache-control": "no-store" } });
 }
