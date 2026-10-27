@@ -9,6 +9,8 @@ type CrossrefResponse = { message?: { items?: Array<Record<string, unknown>> } }
 type DataCiteResponse = { data?: Array<{ id?: string; attributes?: Record<string, unknown> }> };
 type RorResponse = { items?: Array<Record<string, unknown>> };
 type OpenAireResponse = { results?: Array<Record<string, unknown>>; header?: Record<string, unknown> };
+type PubMedSearchResponse = { esearchresult?: { idlist?: string[] } };
+type PubMedSummaryResponse = { result?: { uids?: string[]; [key: string]: unknown } };
 
 function cap(value: unknown, max = 240): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -184,6 +186,60 @@ async function searchOpenAire(q: string): Promise<{ items: ResearchItem[]; state
   };
 }
 
+async function searchPubMed(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
+  const searchUrl = new URL("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi");
+  searchUrl.searchParams.set("db", "pubmed");
+  searchUrl.searchParams.set("term", q);
+  searchUrl.searchParams.set("retmode", "json");
+  searchUrl.searchParams.set("retmax", "6");
+  searchUrl.searchParams.set("tool", "TAMVOnlineResearchAudit");
+  if (process.env.TAMV_CONTACT_EMAIL) searchUrl.searchParams.set("email", process.env.TAMV_CONTACT_EMAIL);
+  if (process.env.NCBI_API_KEY) searchUrl.searchParams.set("api_key", process.env.NCBI_API_KEY);
+
+  const found = await fetchJson<PubMedSearchResponse>(searchUrl.toString());
+  if (!found.ok || !found.data) {
+    return { items: [], state: { id: "pubmed", name: "PubMed / NCBI", status: "unavailable", count: 0, note: found.error } };
+  }
+  const ids = arr(found.data.esearchresult?.idlist).filter((id): id is string => typeof id === "string" && /^\d+$/.test(id)).slice(0, 6);
+  if (!ids.length) return { items: [], state: { id: "pubmed", name: "PubMed / NCBI", status: "empty", count: 0, note: "No se encontraron registros en esta consulta." } };
+
+  const summaryUrl = new URL("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi");
+  summaryUrl.searchParams.set("db", "pubmed");
+  summaryUrl.searchParams.set("id", ids.join(","));
+  summaryUrl.searchParams.set("retmode", "json");
+  summaryUrl.searchParams.set("tool", "TAMVOnlineResearchAudit");
+  if (process.env.TAMV_CONTACT_EMAIL) summaryUrl.searchParams.set("email", process.env.TAMV_CONTACT_EMAIL);
+  if (process.env.NCBI_API_KEY) summaryUrl.searchParams.set("api_key", process.env.NCBI_API_KEY);
+
+  const summary = await fetchJson<PubMedSummaryResponse>(summaryUrl.toString());
+  if (!summary.ok || !summary.data?.result) {
+    return { items: [], state: { id: "pubmed", name: "PubMed / NCBI", status: "unavailable", count: 0, note: summary.error || "NCBI no devolvió el resumen bibliográfico." } };
+  }
+  const rows = ids.flatMap((id) => {
+    const row = summary.data?.result?.[id] as Record<string, unknown> | undefined;
+    if (!row) return [];
+    const title = cap(row.title, 600);
+    if (!title) return [];
+    const idsRaw = arr(row.articleids);
+    const doiItem = idsRaw.find((item) => /doi/i.test(cap((item as Record<string, unknown>)?.idtype)));
+    const doi = cap((doiItem as Record<string, unknown> | undefined)?.value).replace(/^https?:\/\/doi\.org\//i, "") || null;
+    const authors = arr(row.authors).flatMap((author) => {
+      const name = cap((author as Record<string, unknown>)?.name, 120);
+      return name ? [name] : [];
+    });
+    const year = yearFromDate(row.pubdate);
+    const journal = cap(row.fulljournalname || row.source);
+    const normalized = metadataResult({
+      id: `pubmed:${id}`, provider: "PubMed / NCBI", title,
+      url: `https://pubmed.ncbi.nlm.nih.gov/${id}/`, doi, year, authors,
+      venue: journal || null, resourceType: "biomedical-literature",
+      evidenceClass: "Registro bibliográfico de PubMed/NCBI; la indexación no sustituye lectura crítica ni confirma todos los resultados del artículo.",
+    });
+    return normalized ? [normalized] : [];
+  });
+  return { items: rows, state: { id: "pubmed", name: "PubMed / NCBI", status: rows.length ? "ok" : "empty", count: rows.length, note: "Consulta de metadatos a través de NCBI E-utilities; los derechos del texto completo dependen del artículo y de PMC." } };
+}
+
 async function searchRor(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
   const url = new URL("https://api.ror.org/v2/organizations");
   url.searchParams.set("query", q);
@@ -218,7 +274,7 @@ export async function POST(request: Request) {
   const type = body.type === "organizations" ? "organizations" : "research";
   const results = type === "organizations"
     ? [await searchRor(query)]
-    : await Promise.all([searchOpenAlex(query), searchCrossref(query), searchDataCite(query), searchOpenAire(query)]);
+    : await Promise.all([searchOpenAlex(query), searchCrossref(query), searchDataCite(query), searchOpenAire(query), searchPubMed(query)]);
   const combined = results.flatMap((x) => x.items).slice(0, 30);
   const unique = new Map<string, ResearchItem>();
   for (const item of combined) {
