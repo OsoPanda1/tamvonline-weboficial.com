@@ -12,6 +12,7 @@ type Props = {
   githubConnectionAvailable: boolean;
   orcidConnectionAvailable: boolean;
   orcidOAuthConfigured: boolean;
+  registrationEnabled: boolean;
   pendingOrcid: string;
   initialProfile: {
     displayName:string; bio:string; affiliation:string; countryCode:string; researchAreas:string[];
@@ -40,7 +41,7 @@ const authErrors: Record<string, string> = {
   orcid_unconfigured: 'El flujo ORCID de inscripción aún necesita credenciales públicas de OAuth configuradas.',
 };
 
-export default function RegistrationForm({ authenticated, name, email, emailVerified, callbackError, githubConnectionAvailable, orcidConnectionAvailable, orcidOAuthConfigured, pendingOrcid, initialProfile, initialIdentifiers }: Props) {
+export default function RegistrationForm({ authenticated, name, email, emailVerified, callbackError, githubConnectionAvailable, orcidConnectionAvailable, orcidOAuthConfigured, registrationEnabled, pendingOrcid, initialProfile, initialIdentifiers }: Props) {
   const [displayName, setDisplayName] = useState(initialProfile?.displayName || name || '');
   const [bio, setBio] = useState(initialProfile?.bio || '');
   const [affiliation, setAffiliation] = useState(initialProfile?.affiliation || '');
@@ -110,6 +111,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
   if (!authenticated) {
     return <div className="form-panel">
       <h2>Identidad segura con Auth0</h2>
+      {!registrationEnabled && <div className="form-alert" role="status"><strong>Alta de TAMV ID temporalmente cerrada.</strong><br/>Puedes autenticarte con el proveedor habilitado, pero la ficha institucional no podrá crearse hasta que el responsable de datos, el aviso de privacidad y la configuración del registro estén confirmados.</div>}
       <p className="subtext">TAMV no solicita una contraseña nueva dentro de este sitio. El inicio de sesión se realiza en el proveedor de identidad. Después podrás completar tu perfil y aceptar los términos correspondientes.</p>
       {error && <div className="form-alert error" role="alert">{error}</div>}
       <div className="form-alert"><strong>Privacidad desde el diseño</strong><br />El perfil TAMV se crea solo después de validar la sesión y el correo. Un identificador ORCID autenticado no revela ni verifica por sí solo un correo electrónico; el proceso combina ORCID con una cuenta cuyo correo esté verificado.</div>
@@ -142,6 +144,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
 
   return <form className="form-panel" onSubmit={submit}>
     <div className="form-panel-heading"><Fingerprint aria-hidden="true" /><div><h2>{initialProfile ? 'Actualizar tu ficha TAMV' : 'Crear tu ficha TAMV'}</h2><p className="subtext">Identidad declarada, información mínima y opciones de visibilidad transparentes.</p></div></div>
+    {!registrationEnabled && <div className="form-alert" role="status"><strong>Registro TAMV ID no habilitado en este entorno.</strong><br/>No se enviarán cambios de perfil hasta que TAMV_REGISTRATION_ENABLED y las condiciones de privacidad estén configuradas.</div>}
     {pendingOrcid && <div className="orcid-state-success" role="status"><CheckCircle2 aria-hidden="true"/><span>ORCID autenticado mediante OAuth: <strong>{pendingOrcid}</strong>. Se vinculará después de guardar tu ficha con correo verificado. <a href="/api/orcid/pending">Cancelar esta vinculación pendiente</a>.</span></div>}
     <div className="identity-chip"><ShieldCheck aria-hidden="true" /><div><strong>{email || 'Sesión autenticada'}</strong><small>{emailVerified ? 'Correo verificado por Auth0' : 'Correo no verificado · se requiere verificarlo antes de registrar'}</small></div></div>
     {!emailVerified && <div className="form-alert error" role="alert">Tu identidad está autenticada, pero el correo no figura como verificado en Auth0. Verifícalo en el proveedor antes de solicitar el TAMV ID.</div>}
@@ -162,7 +165,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="field field-wide"><label className="check-row"><input type="checkbox" checked={privacyAccepted} onChange={(e)=>setPrivacyAccepted(e.target.checked)} required /><span>He leído el <a href="/privacidad" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a> y comprendo qué datos se almacenan y con qué finalidad.</span></label></div>
     </div>
     {error && <div className="form-alert error" role="alert">{error}</div>}
-    <div className="form-actions"><button className="button button-primary" type="submit" disabled={submitting || !emailVerified}>{submitting ? 'Guardando ficha…' : (initialProfile ? 'Guardar cambios de mi ficha' : 'Solicitar TAMV ID')} <ArrowRight aria-hidden="true" /></button><a className="button button-ghost" href="/cuenta">Ya tengo una ficha</a></div>
+    <div className="form-actions"><button className="button button-primary" type="submit" disabled={submitting || !emailVerified || !registrationEnabled}>{submitting ? 'Guardando ficha…' : !registrationEnabled ? 'Registro temporalmente cerrado' : (initialProfile ? 'Guardar cambios de mi ficha' : 'Solicitar TAMV ID')} <ArrowRight aria-hidden="true" /></button><a className="button button-ghost" href="/cuenta">Ya tengo una ficha</a></div>
     <p className="small-note">La cuenta de identidad la gestiona Auth0. El registro TAMV y los metadatos de perfil se guardan en Supabase. La base de datos asigna el identificador; el navegador no elige ni genera el TAMV ID.</p>
   </form>;
 }
