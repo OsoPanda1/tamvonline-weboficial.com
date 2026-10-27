@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 
 export const metadata = { title: 'Términos de participación', description: 'Términos iniciales de participación, autoría, uso del TAMV ID y colaboración en TAMV Online Network.' };
@@ -5,7 +6,7 @@ export const metadata = { title: 'Términos de participación', description: 'T�
 export default function TermsPage() {
   return <main>
     <div className="utility-strip"><span>MARCO DE PARTICIPACIÓN</span><span>VERSIÓN 1.0.0 · 27 OCTUBRE 2026</span></div>
-    <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/membresia">Membresía</Link><Link href="/privacidad">Privacidad</Link><Link href="/politica-editorial">Política editorial</Link></nav></header>
+    <SiteHeader active="/terminos" />
     <section className="legal-page"><div className="legal-container">
       <p className="legal-kicker">TÉRMINOS DE PARTICIPACIÓN · MARCO INICIAL</p><h1>Reglas claras para una colaboración responsable.</h1>
       <div className="legal-notice"><strong>Estado:</strong> términos iniciales sujetos a revisión jurídica antes del lanzamiento general. La habilitación del registro requiere completar los datos del responsable y el aviso de privacidad.</div>
