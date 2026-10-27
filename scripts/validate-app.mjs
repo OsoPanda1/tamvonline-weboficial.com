@@ -82,7 +82,7 @@ for (const term of ["enable row level security", "revoke all on table", "tamv_re
   if (!migration.toLowerCase().includes(term.toLowerCase())) failures.push("SQL migration missing security/schema marker: " + term);
 }
 for (const term of ["tamv-evidence-transfer-1.0.0", "metadataCompleteness", "reproducibility", "rightsAndLicense", "externalReview", "intellectualProperty"]) { if (!researchEngine.includes(term)) failures.push("Evidence engine missing marker: " + term); }
-for (const term of ["api.openalex.org/works", "api.crossref.org/works", "api.datacite.org/dois", "api.ror.org/v2/organizations"]) { if (!researchSearch.includes(term)) failures.push("Research search connector missing: " + term); }
+for (const term of ["api.openalex.org/works", "api.crossref.org/works", "api.datacite.org/dois", "api.ror.org/v2/organizations", "api.openaire.eu/graph/v4/research-products", "eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"]) { if (!researchSearch.includes(term)) failures.push("Research search connector missing: " + term); }
 for (const term of ["auditHash", "Crossref", "DataCite", "OpenAlex", "saveResearchAuditSnapshot"]) { if (!researchAudit.includes(term)) failures.push("DOI audit route missing: " + term); }
 for (const term of ["EPO_OPS_KEY", "EPO_OPS_SECRET", "link_only", "PATENTSCOPE"]) { if (!researchPatents.includes(term)) failures.push("IP audit route missing: " + term); }
 for (const term of ["enable row level security", "revoke all on table", "tamv_research_audits", "audit_hash", "evidence_snapshot"]) { if (!researchMigration.toLowerCase().includes(term.toLowerCase())) failures.push("Research audit migration missing marker: " + term); }
