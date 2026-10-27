@@ -253,4 +253,87 @@ $$;
 revoke all on function public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text) from public, anon, authenticated;
 grant execute on function public.tamv_vetra_finalize_decision(uuid,text,integer,boolean,text,jsonb,integer,text,text) to service_role;
 
+
+-- Atomic submission and per-member rate limit. This closes the race between counting submissions and inserting one.
+create or replace function public.tamv_vetra_submit_proposal(
+  p_submitted_by_tamv_id text,
+  p_submitter_display_name text,
+  p_title text,
+  p_proposal_type text,
+  p_maturity_stage text,
+  p_abstract text,
+  p_problem_statement text,
+  p_contribution_claim text,
+  p_methodology text,
+  p_reproducibility_plan text,
+  p_sources_and_artifacts jsonb,
+  p_ethics_and_harm text,
+  p_privacy_and_data text,
+  p_security_plan text,
+  p_rights_and_ip text,
+  p_sustainability_plan text,
+  p_funding_and_conflicts text,
+  p_filter_declarations jsonb,
+  p_submitter_attested boolean
+)
+returns table(id uuid, proposal_code text, status text, created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_recent_count integer;
+  v_id uuid;
+  v_proposal_code text;
+  v_status text;
+  v_created_at timestamptz;
+begin
+  if p_submitted_by_tamv_id is null or p_submitted_by_tamv_id !~ '^TAMV-[0-9A-F]{26}$' then
+    raise exception 'Invalid TAMV member identifier';
+  end if;
+  if p_submitter_attested is not true then
+    raise exception 'Submitter attestation is required';
+  end if;
+  if jsonb_typeof(coalesce(p_sources_and_artifacts,'[]'::jsonb)) <> 'array'
+     or jsonb_array_length(coalesce(p_sources_and_artifacts,'[]'::jsonb)) > 20 then
+    raise exception 'Invalid proposal references';
+  end if;
+  if jsonb_typeof(coalesce(p_filter_declarations,'{}'::jsonb)) <> 'object'
+     or coalesce((p_filter_declarations->>'filter1IntegrityAndProvenance')::boolean,false) is not true
+     or coalesce((p_filter_declarations->>'filter2MethodAndReproducibility')::boolean,false) is not true
+     or coalesce((p_filter_declarations->>'filter3ResponsibleUseAndRights')::boolean,false) is not true
+     or coalesce((p_filter_declarations->>'understandsDeclarationsAreNotApproval')::boolean,false) is not true then
+    raise exception 'All three VETRA gate declarations are required';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_submitted_by_tamv_id, 0));
+  select count(*) into v_recent_count
+    from public.tamv_vetra_proposals
+   where submitted_by_tamv_id=p_submitted_by_tamv_id
+     and created_at >= now() - interval '24 hours';
+  if v_recent_count >= 3 then
+    raise exception 'VETRA proposal rate limit reached: three proposals per member in 24 hours';
+  end if;
+
+  insert into public.tamv_vetra_proposals(
+    submitted_by_tamv_id,submitter_display_name,title,proposal_type,maturity_stage,abstract,
+    problem_statement,contribution_claim,methodology,reproducibility_plan,sources_and_artifacts,
+    ethics_and_harm,privacy_and_data,security_plan,rights_and_ip,sustainability_plan,
+    funding_and_conflicts,filter_declarations,submitter_attested,status,risk_screening_status
+  ) values (
+    p_submitted_by_tamv_id,p_submitter_display_name,p_title,p_proposal_type,p_maturity_stage,p_abstract,
+    p_problem_statement,p_contribution_claim,p_methodology,p_reproducibility_plan,
+    coalesce(p_sources_and_artifacts,'[]'::jsonb),p_ethics_and_harm,p_privacy_and_data,p_security_plan,
+    p_rights_and_ip,p_sustainability_plan,p_funding_and_conflicts,p_filter_declarations,true,'received','pending'
+  ) returning tamv_vetra_proposals.id,tamv_vetra_proposals.proposal_code,
+            tamv_vetra_proposals.status,tamv_vetra_proposals.created_at
+       into v_id,v_proposal_code,v_status,v_created_at;
+
+  return query select v_id,v_proposal_code,v_status,v_created_at;
+end;
+$$;
+
+revoke all on function public.tamv_vetra_submit_proposal(text,text,text,text,text,text,text,text,text,text,jsonb,text,text,text,text,text,text,jsonb,boolean) from public, anon, authenticated;
+grant execute on function public.tamv_vetra_submit_proposal(text,text,text,text,text,text,text,text,text,text,jsonb,text,text,text,text,text,text,jsonb,boolean) to service_role;
+
 commit;
