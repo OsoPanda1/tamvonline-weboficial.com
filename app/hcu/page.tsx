@@ -16,7 +16,7 @@ export default async function HcuPage(){
   <div className="utility-strip"><span>TAMV Ω∞ HCU</span><span>TRANSFORMATION INTELLIGENCE / 2026–2050</span><span>ESTADO: PROTOTIPO CONCEPTUAL INTERACTIVO</span></div>
   <header className="site-header hcu-site-header">
    <Link className="brand-lockup" href="/" aria-label="TAMV Online Network"><span className="brand-monogram">Ω</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link>
-   <nav className="site-nav" aria-label="Navegación principal"><Link href="/investigacion">Investigación</Link><Link href="/vetra">VETRA Ω</Link><Link href="/roadmap">Roadmap</Link><Link href="/catalogo">Catálogo</Link></nav>
+   <nav className="site-nav" aria-label="Navegación principal"><Link href="/investigacion">Investigación</Link><Link href="/comunidad">Comunidad</Link><Link href="/vetra">VETRA Ω</Link><Link href="/roadmap">Roadmap</Link><Link href="/catalogo">Catálogo</Link></nav>
    <div className="header-actions">{session?<Link className="button button-small button-ghost" href="/cuenta"><CircleUserRound aria-hidden="true"/> Mi cuenta</Link>:<><Link className="button button-small button-ghost" href="/registro">Iniciar / registrar</Link><a className="button button-small button-primary" href="/api/auth/login?returnTo=%2Fhcu">Entrar <ArrowUpRight aria-hidden="true"/></a></>}</div>
   </header>
   <HcuUniverse />
