@@ -14,7 +14,7 @@ const DOMAIN_KEYS = new Set([
   "metaEvaluation","evidenceProvenance","futureConsequences",
 ]);
 const RECOMMENDATIONS = new Set(["minor_revision","major_revision","accept_with_conditions","reject","recuse"]);
-const OPEN_STATUSES = new Set(["received","administrative_screening","independent_review","minor_revision","major_revision"]);
+const OPEN_STATUSES = new Set(["received","administrative_screening","independent_review"]);
 
 function text(value: unknown, max: number): string {
   if (typeof value !== "string") return "";
@@ -122,6 +122,7 @@ export async function POST(request:Request) {
     if("error" in auth) return auth.error;
     const proposal=await getVetraProposalStatus(proposalId);
     if(!proposal||!OPEN_STATUSES.has(proposal.status)) return NextResponse.json({error:"La propuesta no existe o no admite una revisión nueva en su estado actual."},{status:404});
+    if(proposal.submitted_by_tamv_id===auth.member.tamv_id) return NextResponse.json({error:"No puedes revisar una propuesta vinculada a tu propio TAMV ID. Debes recusarte y derivarla a otra persona."},{status:409});
     const previous=await getVetraLatestReviewsForDecision(proposalId);
     if(previous.some(x=>x.reviewer_tamv_id===auth.member.tamv_id)) return NextResponse.json({error:"Ya existe una revisión registrada por este TAMV ID para la propuesta. Para corregir un dictamen, debe habilitarse un flujo versionado de revisión."},{status:409});
     const result=await saveVetraReview({
