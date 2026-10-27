@@ -42,7 +42,6 @@ export type HcuDomain = {
   outcomes: string[];
 };
 
-const note = 'Parámetros de visualización y simulación; no son métricas empíricas ni certificación.';
 const sourceStatus = 'Sin fuente primaria asociada en este prototipo. Requiere evidencia antes de afirmaciones factuales.';
 
 export const hcuDomains: HcuDomain[] = [
