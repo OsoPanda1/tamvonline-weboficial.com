@@ -27,7 +27,8 @@ function configured(): boolean {
   return process.env.TAMV_VETRA_SUBMISSIONS_ENABLED === "true"
     && Boolean(process.env.TAMV_DATA_CONTROLLER_NAME?.trim())
     && Boolean(process.env.TAMV_DATA_CONTROLLER_ADDRESS?.trim())
-    && Boolean(process.env.TAMV_PRIVACY_CONTACT_EMAIL?.trim());
+    && Boolean(process.env.TAMV_PRIVACY_CONTACT_EMAIL?.trim())
+    && process.env.TAMV_VETRA_RETENTION_POLICY_APPROVED === "true";
 }
 
 export async function POST(request: Request) {
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
   }
   if (!configured()) {
     return NextResponse.json({
-      error: "La recepción VETRA está cerrada durante la preparación del piloto. Antes de abrirla hay que aplicar la migración 003, probar accesos/RLS, aprobar el aviso de privacidad y activar TAMV_VETRA_SUBMISSIONS_ENABLED.",
+      error: "La recepción VETRA está cerrada durante la preparación del piloto. Antes de abrirla hay que aplicar la migración 003, probar accesos/RLS, aprobar el aviso de privacidad y la política de retención, y activar TAMV_VETRA_SUBMISSIONS_ENABLED.",
       submissionsEnabled: false,
     }, { status: 503, headers: { "cache-control": "no-store" } });
   }
