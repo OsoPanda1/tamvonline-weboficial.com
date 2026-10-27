@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 export type ProviderState = {
   id: string;
   name: string;
@@ -125,6 +127,5 @@ export function yearFromDate(value: unknown): number | null {
 }
 
 export function sha256Hex(value: string): string {
-  // Server-only callers import node:crypto; this module stays portable by using Web Crypto.
-  return "";
+  return createHash("sha256").update(value, "utf8").digest("hex");
 }
