@@ -355,16 +355,20 @@ export type VetraReviewForDecision = {
   id:string;
   proposal_id:string;
   reviewer_tamv_id:string | null;
+  reviewer_role:string;
   independence_declaration:Record<string,unknown>;
   domain_scores:Record<string,unknown>;
   recommendation:string;
+  rationale:string;
+  evidence_references:Array<{label:string;url:string}>;
+  review_version:string;
   created_at:string;
 };
 
 export async function getVetraReviewsForProposal(proposalId:string):Promise<VetraReviewForDecision[]> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(proposalId)) throw new Error("Invalid VETRA proposal identifier.");
   const rows=await supabaseFetch<VetraReviewForDecision[]>(
-    `tamv_vetra_reviews?select=id,proposal_id,reviewer_tamv_id,independence_declaration,domain_scores,recommendation,created_at&proposal_id=eq.${encodeURIComponent(proposalId)}&order=created_at.desc&limit=50`,
+    `tamv_vetra_reviews?select=id,proposal_id,reviewer_tamv_id,reviewer_role,independence_declaration,domain_scores,recommendation,rationale,evidence_references,review_version,created_at&proposal_id=eq.${encodeURIComponent(proposalId)}&order=created_at.desc&limit=50`,
   );
   return Array.isArray(rows)?rows:[];
 }
