@@ -156,7 +156,7 @@ HCU is a conceptual map and literature-discovery surface, not a validated foreca
 
 ## Identity providers and ORCID
 
-Auth0 signup/email login requires configured tenant connections and production callback values. GitHub login is exposed only when `AUTH0_GITHUB_CONNECTION` names an enabled Auth0 connection. Direct ORCID link requires `ORCID_CLIENT_ID`, `ORCID_CLIENT_SECRET`, the exact callback `APP_BASE_URL/api/orcid/callback`, and migration 004. These environment variables default empty; provider integration is not live until configured and browser-tested. Manual ORCID fields are stored as declared, not verified.
+Auth0 signup/email login requires configured tenant connections and production callback values. GitHub login is exposed only when `AUTH0_GITHUB_CONNECTION` names an enabled Auth0 connection. Direct ORCID verification can start before TAMV ID creation or from an existing account. It requires `ORCID_CLIENT_ID`, `ORCID_CLIENT_SECRET`, the exact callback `APP_BASE_URL/api/orcid/callback`, and migration 004. A pre-registration ORCID is stored temporarily in an encrypted, short-lived cookie and linked only after a verified-email Auth0 session and successful TAMV registration. These environment variables default empty; the flow is not live until configured and browser-tested. Manual ORCID fields are stored as declared, not verified.
 
 ## ROR preparation
 
