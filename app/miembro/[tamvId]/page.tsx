@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getPublicMember, SupabaseConfigurationError } from '@/lib/supabase-rest';
@@ -23,7 +24,7 @@ export default async function PublicMemberPage({ params }: { params: Promise<{ t
   if (!member && !unavailable) notFound();
   return <main>
     <div className="utility-strip"><span>RESOLVED IDENTITY RECORD</span><span>TAMV ONLINE NETWORK</span></div>
-    <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/membresia">Membresía</Link><Link href="/catalogo">Catálogo</Link><Link href="/privacidad">Privacidad</Link></nav></header>
+    <SiteHeader active="/comunidad" />
     <section className="form-shell"><div className="member-profile-hero">
       <p className="eyebrow">TAMV ID · FICHA PÚBLICA</p>
       {unavailable ? <><h1>El resolver no está disponible.</h1><p>La base de datos no se pudo consultar. Inténtalo más tarde o regresa al sitio institucional.</p></> : <><div className="member-id">{member!.tamv_id}</div><h1>{member!.display_name}</h1><p>Ficha pública aprobada por TAMV. La inclusión aquí no equivale a verificación de identidad civil, acreditación académica, aval de afiliación o evaluación independiente.</p><div className="profile-data"><strong>Biografía</strong><span>{member!.bio || 'Sin biografía pública.'}</span><strong>Afiliación declarada</strong><span>{member!.affiliation || 'No declarada'}</span><strong>País / territorio</strong><span>{member!.country_code || 'No declarado'}</span><strong>Áreas de trabajo</strong><span>{member!.research_areas?.length ? member!.research_areas.join(' · ') : 'No declaradas'}</span><strong>Identificadores y enlaces</strong><span>{member!.identifiers.length ? member!.identifiers.map((id) => `${id.scheme}: ${id.value} (${id.verification_status})`).join(' · ') : 'Sin enlaces declarados'}</span></div><p className="small-note">Los identificadores externos figuran como declarados salvo que el estado indique explícitamente verificado. La vigencia del perfil y las obras vinculadas debe comprobarse en sus fuentes originales.</p></>}
