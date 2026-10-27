@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { ArrowUpRight, CircleAlert, LockKeyhole } from 'lucide-react';
 import { currentServerSession } from '@/lib/auth0-native';
@@ -36,7 +37,7 @@ export default async function VetraDecisionPage(){
  }
  return <main className="site-shell">
   <div className="utility-strip"><span>ÁREA PRIVADA · VETRA Ω∞</span><span>DECISIÓN HUMANA · QUÓRUM</span></div>
-  <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/vetra">Protocolo VETRA</Link><Link href="/vetra/revision">Consola de revisión</Link><Link href="/vetra/mis-propuestas">Mis propuestas</Link></nav><div className="header-actions"><Link className="button button-small button-ghost" href="/cuenta">Mi cuenta</Link></div></header>
+  <SiteHeader active="/vetra" />
   <section className="legal-page"><div className="legal-container"><p className="legal-kicker">CONSEJO DE EVALUACIÓN · SECRETARÍA</p><h1>Consola de decisiones VETRA</h1><p>Esta consola es una función interna para responsables de decisión expresamente autorizados. Exige revisiones independientes, cobertura de los catorce dominios, declaración de conflictos y motivación trazable.</p>
    {!ready?<div className="legal-notice"><LockKeyhole aria-hidden="true"/> La consola está deshabilitada hasta que la gobernanza, la privacidad, la retención y la base estén aprobadas.</div>
    :!session?<div className="legal-notice"><LockKeyhole aria-hidden="true"/> Inicia sesión con Auth0 para verificar autorización.<div className="form-actions"><a className="button button-primary" href="/api/auth/login?returnTo=%2Fvetra%2Fdecision">Iniciar sesión <ArrowUpRight aria-hidden="true"/></a></div></div>
