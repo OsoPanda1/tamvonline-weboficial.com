@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "1.0.0",
+  "title": "Catálogo público de TAMV Online Network",
+  "updated": "2026-10-27",
+  "description": "Índice inicial de enlaces públicos. Cada elemento requiere validación individual de sus metadatos originales. El estado 'link-located' significa que se ha registrado una URL pública, no que el contenido tenga revisión por pares o validación independiente.",
+  "metadataPolicy": {
+    "minimumFields": [
+      "title",
+      "url",
+      "resourceType",
+      "sourceType",
+      "evidenceScope",
+      "reviewStatus"
+    ],
+    "licenseRule": "No declarar licencia si no está confirmada en el registro original.",
+    "authorshipRule": "No inventar autores, afiliaciones, colaboradores ni validaciones."
+  },
+  "records": [
+    {
+      "id": "orcid-edwin-castillo",
+      "title": "ORCID — Edwin Oswaldo Castillo Trejo",
+      "url": "https://orcid.org/0009-0008-5050-1539",
+      "resourceType": "person-profile",
+      "sourceType": "primary-profile",
+      "evidenceScope": "Identidad persistente y obras declaradas por el titular; no certifica afiliación ni calidad individual de las obras.",
+      "reviewStatus": "link-located"
+    },
+    {
+      "id": "github-oso-panda",
+      "title": "GitHub — Perfil público del proyecto",
+      "url": "https://github.com/OsoPanda1",
+      "resourceType": "software-profile",
+      "sourceType": "primary-source",
+      "evidenceScope": "Acceso a repositorios, historial, releases y archivos; madurez por proyecto.",
+      "reviewStatus": "link-located"
+    },
+    {
+      "id": "zenodo-19436662",
+      "title": "Zenodo DOI 10.5281/zenodo.19436662",
+      "url": "https://doi.org/10.5281/zenodo.19436662",
+      "doi": "10.5281/zenodo.19436662",
+      "resourceType": "repository-record",
+      "sourceType": "persistent-record",
+      "evidenceScope": "Consultar la ficha original para confirmar título, autoría, fecha, versión, licencia y contenido.",
+      "reviewStatus": "metadata-needs-individual-verification"
+    },
+    {
+      "id": "avixa-2025-tamv-isabella",
+      "title": "TAMV e Isabella Villaseñor AI: el parteaguas que redefine el metaverso desde México",
+      "url": "https://xchange.avixa.org/posts/tamv-e-isabella-villasenor-ai-el-parteaguas-que-redefine-el-metaverso-desde-mexico",
+      "resourceType": "professional-dissemination",
+      "sourceType": "external-publication",
+      "publicationDate": "2025-12-05",
+      "evidenceScope": "Evidencia de difusión pública; no equivale a revisión científica por pares.",
+      "reviewStatus": "verify-original-metadata-before-formal-citation"
+    },
+    {
+      "id": "avixa-2026-tamv",
+      "title": "TAMV 2026: modelo de plataforma para experiencias AV inmersivas",
+      "url": "https://xchange.avixa.org/posts/tamv-2026-modelo-de-plataforma-civilizatoria-para-experiencias-av-inmersivas",
+      "resourceType": "professional-dissemination",
+      "sourceType": "external-publication",
+      "evidenceScope": "Consultar registro original para verificar título exacto, autoría, fecha y contenido.",
+      "reviewStatus": "metadata-needs-individual-verification"
+    },
+    {
+      "id": "tamv-odoo",
+      "title": "TAMV Online — Portal institucional",
+      "url": "https://tamvonline-oficial.odoo.com/",
+      "resourceType": "project-portal",
+      "sourceType": "project-published",
+      "evidenceScope": "Fuente primaria de información autodeclarada; no equivale a validación independiente.",
+      "reviewStatus": "link-located"
+    },
+    {
+      "id": "tamv-institutional-repo",
+      "title": "Repositorio del sitio institucional TAMV",
+      "url": "https://github.com/OsoPanda1/tamvonline-weboficial.com",
+      "resourceType": "website-source-code",
+      "sourceType": "primary-source",
+      "evidenceScope": "Historial público de cambios y código; no demuestra por sí mismo estado del despliegue.",
+      "reviewStatus": "link-located"
+    },
+    {
+      "id": "linkedin-edwin",
+      "title": "Perfil profesional público de Edwin Oswaldo Castillo",
+      "url": "https://mx.linkedin.com/in/edwin-oswaldo-castillo-aka-anubis-villase%C3%B1or-69a847376",
+      "resourceType": "professional-profile",
+      "sourceType": "profile-self-declared",
+      "evidenceScope": "Información de trayectoria declarada en el perfil.",
+      "reviewStatus": "link-located"
+    }
+  ]
+}
