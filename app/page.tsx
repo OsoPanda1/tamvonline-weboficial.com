@@ -48,7 +48,7 @@ export default function HomePage() {
           <a href="#lineas">Líneas de trabajo</a>
           <a href="#validacion">Validación</a>
           <Link href="/membresia">Membresía</Link>
-          <Link href="/catalogo">Catálogo</Link><Link href="/investigacion">Investigación</Link><Link href="/resolver">Resolver TAMV ID</Link>
+          <Link href="/catalogo">Catálogo</Link><Link href="/investigacion">Investigación</Link><Link href="/resolver">Resolver TAMV ID</Link><Link href="/auditoria">Auditoría e IP</Link>
         </nav>
         <div className="header-actions">
           <Link className="header-login" href="/cuenta">Acceder</Link>
@@ -113,6 +113,8 @@ export default function HomePage() {
         <div className="status-legend"><span className="legend-title">ESTADOS DE MADUREZ</span><span>Propuesto</span><span>En desarrollo</span><span>Prototipo</span><span>Probado</span><span>Desplegado</span><span>Evaluado externamente</span></div>
         <p className="small-note">Un identificador persistente ayuda a resolver un registro; no certifica identidad civil, competencia, calidad científica o afiliación. TAMV documentará cada afirmación según su evidencia disponible.</p>
       </div></section>
+
+      <section className="audit-teaser"><div className="section-wrap audit-teaser-inner"><div><p className="eyebrow">INVESTIGACIÓN · PROPIEDAD INTELECTUAL · ISABELLA</p><h2>Del registro público a un expediente trazable.</h2><p>Búsqueda federada, cotejo de DOI, mapa de APIs y revisión preliminar de anterioridad con límites explícitos de evidencia.</p></div><Link className="button button-primary" href="/auditoria">Abrir motor de evidencia <ArrowRight aria-hidden="true" /></Link></div></section>
 
       <section className="member-section" id="membresia"><div className="section-wrap member-layout"><div className="member-intro"><p className="eyebrow">05 — POR QUÉ FORMAR PARTE</p><h2>Tu trabajo merece <em>contexto, atribución y continuidad.</em></h2><p>La membresía está pensada para personas que quieran compartir conocimiento, desarrollar software, documentar su trayectoria o participar en proyectos con reglas visibles.</p><Link className="button button-primary" href="/registro">Solicitar membresía <ArrowRight aria-hidden="true" /></Link><p className="small-note">La inscripción no promete empleo, remuneración, becas, financiación, certificación académica ni aceptación automática en proyectos.</p></div><div className="benefit-grid">{benefits.map(([title, text], i) => <article key={title}><span>0{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></div></section>
 
