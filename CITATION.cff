@@ -1,0 +1,6 @@
+cff-version: 1.2.0
+message: "When referencing this website, cite the repository URL and the specific commit or release you consulted."
+title: "TAMV Online Network — Institutional Website"
+type: software
+url: "https://github.com/OsoPanda1/tamvonline-weboficial.com"
+abstract: "Static institutional website for public identity, research and software discovery, catalogue metadata, open-resource pathways, and editorial transparency."
