@@ -9,11 +9,15 @@ const required = [
   "app/registro/page.tsx",
   "app/registro/registration-form.tsx",
   "app/cuenta/page.tsx",
+  "app/components/site-header.tsx",
+  "app/comunidad/page.tsx",
+  "app/comunidad/community-directory.tsx",
   "app/api/auth/login/route.ts",
   "app/api/auth/callback/route.ts",
   "app/api/auth/logout/route.ts",
   "app/api/orcid/connect/route.ts",
   "app/api/orcid/callback/route.ts",
+  "app/api/orcid/pending/route.ts",
   "app/api/members/register/route.ts",
   "app/api/members/me/route.ts",
   "app/api/members/[tamvId]/route.ts",
@@ -80,6 +84,10 @@ const hcuComponent = await source("app/hcu/hcu-universe.tsx");
 const hcuModel = await source("lib/hcu-model.ts");
 const orcidConnect = await source("app/api/orcid/connect/route.ts");
 const orcidCallback = await source("app/api/orcid/callback/route.ts");
+const orcidPending = await source("app/api/orcid/pending/route.ts");
+const siteHeader = await source("app/components/site-header.tsx");
+const communityPage = await source("app/comunidad/page.tsx");
+const communityDirectory = await source("app/comunidad/community-directory.tsx");
 const orcidMigration = await source("supabase/migrations/202610270004_orcid_verified_link.sql");
 const register = await source("app/api/members/register/route.ts");
 const supabase = await source("lib/supabase-rest.ts");
@@ -142,6 +150,16 @@ for (const term of ["AUTH0_GITHUB_CONNECTION", "AUTH0_ORCID_CONNECTION", "code_c
 for (const term of ["githubConnectionAvailable", "orcidConnectionAvailable", "orcidOAuthConfigured", "pendingOrcid", "provider-unavailable", "Crear cuenta con correo"]) { if (!registrationForm.includes(term)) failures.push("Registration UI missing provider configuration/availability marker: " + term); }
 for (const term of ["https://orcid.org/oauth/authorize", "/authenticate", "state", "auth0Sub", "mode", "sealPayload", "cookieOptions"]) { if (!orcidConnect.includes(term)) failures.push("ORCID connect route missing OAuth security/scope marker: " + term); }
 for (const term of ["https://orcid.org/oauth/token", "canonicalOrcid", "linkVerifiedOrcidIdentity", "session.sub", "secureEquals"]) { if (!orcidCallback.includes(term)) failures.push("ORCID callback missing identity/state verification: " + term); }
+for (const term of ['"signup"', 'pendingOrcidCookieName', 'sealPayload', 'cookieOptions', 'safeReturnTo']) { if (!orcidConnect.includes(term)) failures.push("ORCID signup/link route missing pending-flow security marker: " + term); }
+for (const term of ['mode === "signup"', 'pendingOrcidCookieName', 'cookieOptions(30 * 60)', 'secureEquals(state, transaction.state)', 'canonicalOrcid']) { if (!orcidCallback.includes(term)) failures.push("ORCID callback missing signup handoff or transaction validation: " + term); }
+for (const term of ['pendingOrcidCookieName', 'cookieOptions(0)', 'no-store']) { if (!orcidPending.includes(term)) failures.push("ORCID pending cancellation route missing safe cookie cleanup: " + term); }
+for (const term of ['AUTH0_GITHUB_CONNECTION', 'emailVerified', 'AUTH0_CLIENT_ID']) { if (!authLogin.includes(term)) failures.push("Login route missing configured identity-provider gate: " + term); }
+for (const term of ['getOrcidOwners', 'linkVerifiedOrcidIdentity', 'pendingOrcid', 'session.emailVerified']) { if (!register.includes(term)) failures.push("Member registration missing ORCID-first ownership/email validation: " + term); }
+for (const term of ["currentServerSession", "/comunidad", "/investigacion", "/hcu", "/vetra", "/roadmap", "site-nav-menu"]) { if (!siteHeader.includes(term)) failures.push("Shared navigation missing page-group or session control: " + term); }
+for (const term of ['membership_status=eq.approved', 'profile_visibility=eq.public', 'public_profile_consent=eq.true', 'verification_status=eq.verified', 'getPublicMembers']) { if (!supabase.includes(term)) failures.push("Public community data access is missing consent/verification filters: " + term); }
+for (const term of ["getPublicMembers", "CommunityDirectory", "profiles", "loadError"]) { if (!communityPage.includes(term)) failures.push("Community page missing live directory or empty/error state: " + term); }
+for (const term of ["approved", "consentimiento", "declared", "verified", "No se generan biografías ficticias"]) { if (!communityDirectory.toLowerCase().includes(term.toLowerCase())) failures.push("Community UI missing consent or verification boundary: " + term); }
+
 for (const term of ["tamv_link_verified_orcid", "verification_status='verified'", "revoke all on function", "auth.role()"]) { if (!orcidMigration.includes(term)) failures.push("ORCID migration missing server-only/verification control: " + term); }
 if (!envExample.includes("AUTH0_GITHUB_CONNECTION=") || !envExample.includes("AUTH0_ORCID_CONNECTION=") || !envExample.includes("ORCID_CLIENT_ID=") || !envExample.includes("ORCID_CLIENT_SECRET=")) failures.push("Provider environment variables must be documented.");
 if (!required.includes("app/hcu/page.tsx") || !required.includes("docs/identity-providers-runbook.md")) failures.push("HCU/provider documentation must be required in static checks.");
