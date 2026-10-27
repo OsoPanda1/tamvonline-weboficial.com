@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { ArrowRight, CheckCircle2, CircleAlert, Gavel, ShieldCheck } from 'lucide-react';
 import type { ReviewQueueItem } from '../revision/reviewer-console';
 
@@ -60,7 +60,7 @@ function DecisionEditor({item,onDecided}:{item:DecisionItem;onDecided:(id:string
   const d=review.independence_declaration||{};
   return d.declarationSubmitted===true;
  });
- async function submit(event:React.FormEvent<HTMLFormElement>){
+ async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();setError('');setSuccess('');
   if(!enough){setError('No se puede decidir hasta contar con al menos tres revisiones independientes que cubran los catorce dominios.');return;}
   if(!independent){setError('Falta declaración de independencia en una o más revisiones.');return;}
