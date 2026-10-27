@@ -9,6 +9,8 @@ type Props = {
   email: string;
   emailVerified: boolean;
   callbackError?: string;
+  githubConnectionAvailable: boolean;
+  orcidConnectionAvailable: boolean;
 };
 
 const areas = [
@@ -18,7 +20,11 @@ const areas = [
 ];
 
 const authErrors: Record<string, string> = {
-  login_cancelled: 'El proceso de inicio de sesión fue cancelado.',\n  github_provider_unconfigured: 'GitHub aún no está conectado al tenant Auth0. El administrador debe configurar la conexión y su callback antes de habilitar este acceso.',\n  orcid_provider_unconfigured: 'La entrada mediante ORCID requiere una conexión OIDC registrada en Auth0. Puedes crear tu cuenta con correo/GitHub y después vincular tu ORCID con OAuth oficial.',\n  orcid_link_requires_verified_account: 'Para vincular ORCID se requiere una sesión con correo verificado.',\n  orcid_link_requires_tamv_id: 'Completa primero tu ficha TAMV ID y después vincula el ORCID autenticado.',
+  login_cancelled: 'El proceso de inicio de sesión fue cancelado.',
+  github_provider_unconfigured: 'GitHub aún no está conectado al tenant Auth0. El administrador debe configurar la conexión y su callback antes de habilitar este acceso.',
+  orcid_provider_unconfigured: 'La entrada mediante ORCID requiere una conexión OIDC registrada en Auth0. Puedes crear tu cuenta con correo/GitHub y después vincular tu ORCID con OAuth oficial.',
+  orcid_link_requires_verified_account: 'Para vincular ORCID se requiere una sesión con correo verificado.',
+  orcid_link_requires_tamv_id: 'Completa primero tu ficha TAMV ID y después vincula el ORCID autenticado.',
   invalid_oauth_state: 'No se pudo validar el flujo seguro de autenticación. Vuelve a intentarlo.',
   token_exchange_failed: 'El proveedor de identidad no completó la autenticación.',
   missing_identity_token: 'No se recibió la prueba de identidad esperada.',
