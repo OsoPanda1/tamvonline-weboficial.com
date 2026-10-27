@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link'
 import {
   ArrowRight, ArrowUpRight, BadgeCheck, BookOpen, Boxes, Code2, Compass,
@@ -38,23 +39,7 @@ export default function HomePage() {
         <span>INVESTIGACIÓN / TECNOLOGÍA / MEMORIA</span>
       </div>
 
-      <header className="site-header">
-        <Link className="brand-lockup" href="/" aria-label="TAMV Online Network, inicio">
-          <span className="brand-monogram">T</span>
-          <span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span>
-        </Link>
-        <nav className="site-nav" aria-label="Navegación principal">
-          <a href="#institucion">Institución</a>
-          <a href="#lineas">Líneas de trabajo</a>
-          <a href="#validacion">Validación</a>
-          <Link href="/membresia">Membresía</Link>
-          <Link href="/catalogo">Catálogo</Link><Link href="/investigacion">Investigación</Link><Link href="/comunidad">Comunidad</Link><Link href="/resolver">Resolver TAMV ID</Link><Link href="/auditoria">Auditoría e IP</Link><Link href="/vetra">VETRA Ω</Link><Link href="/roadmap">Roadmap</Link><Link href="/hcu">HCU Ω∞</Link>
-        </nav>
-        <div className="header-actions">
-          <Link className="header-login" href="/cuenta">Acceder</Link>
-          <Link className="button button-small button-primary" href="/registro">Obtener TAMV ID <ArrowUpRight aria-hidden="true" /></Link>
-        </div>
-      </header>
+      <SiteHeader active="home" />
 
       <section className="hero-section" id="inicio">
         <div className="hero-grid" aria-hidden="true" />
