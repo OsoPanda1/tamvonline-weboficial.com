@@ -14,7 +14,7 @@ const DOMAINS = [
   "metaEvaluation","evidenceProvenance","futureConsequences",
 ] as const;
 const DECISIONS = new Set(["minor_revision","major_revision","accepted_with_conditions","rejected","suspended","withdrawn"]);
-const OPEN_STATUSES = new Set(["received","administrative_screening","independent_review","minor_revision","major_revision"]);
+const OPEN_STATUSES = new Set(["received","administrative_screening","independent_review"]);
 
 function text(value:unknown,max:number):string{
   if(typeof value!=="string") return "";
@@ -85,6 +85,7 @@ export async function POST(request:Request){
     if("error" in auth) return auth.error;
     const proposal=await getVetraProposalStatus(proposalId);
     if(!proposal||!OPEN_STATUSES.has(proposal.status)) return NextResponse.json({error:"La propuesta no existe o ya no admite una decisión final."},{status:404});
+    if(proposal.submitted_by_tamv_id===auth.member.tamv_id) return NextResponse.json({error:"El responsable de decisión no puede decidir un expediente vinculado a su propio TAMV ID."},{status:409});
     const reviews=await getVetraLatestReviewsForDecision(proposalId);
     const eligible=reviews.filter(review=>{
       const declaration=review.independence_declaration||{};
