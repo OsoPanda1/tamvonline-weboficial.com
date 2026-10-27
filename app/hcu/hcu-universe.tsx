@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent
 import {
   Activity, AlertTriangle, ArrowDownToLine, ArrowRight, Atom, CheckCircle2, CircleHelp,
   Compass, FileCheck2, GitBranch, Globe2, Layers3, LockKeyhole, Network, Orbit,
-  Pause, Play, Plus, RotateCcw, Search, ShieldAlert, ShieldCheck, SlidersHorizontal,
-  X, Zap,
+  Pause, Play, Plus, RotateCcw, Search, ShieldAlert, ShieldCheck,
+  X,
 } from 'lucide-react';
 import {
   hcuDomains, hcuDomainNodes, hcuHyperedges, hcuInitialNodes, hcuSources,
@@ -35,7 +35,7 @@ const AXES:Array<{key:'influence'|'risk'|'evidence'|'time'|'uncertainty'|'future
  {key:'futurePotential',label:'Potencial de transformación',short:'Ω'},
 ];
 
-function nodePosition(node:HcuNode,nodes:HcuNode[],year:number):{x:number;y:number;z:number}{
+function nodePosition(node:HcuNode,nodes:HcuNode[]):{x:number;y:number;z:number}{
  if(node.type==='core')return {x:0,y:0,z:0};
  if(node.type==='domain'){
   const index=hcuDomains.findIndex(d=>d.id===node.domainId);
@@ -67,7 +67,7 @@ function makeScenarioWeights(year:number){
 }
 
 function projectPoint(node:HcuNode,nodes:HcuNode[],width:number,height:number,rotation:XY,zoom:number,year:number):Point{
- const point=nodePosition(node,nodes,year);
+ const point=nodePosition(node,nodes);
  const timeProgress=Math.max(0,Math.min(1,(year-2026)/24));
  // The time control changes the visual projection using illustrative, non-empirical node dimensions.
  point.x+=(node.axes.futurePotential-.5)*timeProgress*.15;
