@@ -1,3 +1,4 @@
+import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { ArrowUpRight, CircleAlert, LockKeyhole } from 'lucide-react';
 import { currentServerSession } from '@/lib/auth0-native';
@@ -38,7 +39,7 @@ export default async function VetraReviewerPage(){
  }
  return <main className="site-shell">
   <div className="utility-strip"><span>ÁREA PRIVADA · VETRA Ω∞</span><span>REVISIÓN HUMANA INDEPENDIENTE</span></div>
-  <header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><nav className="site-nav"><Link href="/vetra">Protocolo VETRA</Link><Link href="/vetra/mis-propuestas">Mis propuestas</Link><Link href="/roadmap">Roadmap</Link></nav><div className="header-actions"><Link className="button button-small button-ghost" href="/cuenta">Mi cuenta</Link></div></header>
+  <SiteHeader active="/vetra" />
   <section className="legal-page"><div className="legal-container"><p className="legal-kicker">SECRETARÍA EDITORIAL · COLA DE EVALUACIÓN</p><h1>Consola de revisión VETRA</h1><p>Esta consola contiene propuestas no públicas. Accede únicamente si fuiste designado formalmente, tu competencia fue revisada y no existe conflicto. No descargues ni compartas expedientes fuera del proceso autorizado.</p>
    {!ready?<div className="legal-notice"><LockKeyhole aria-hidden="true"/> <strong>Consola deshabilitada.</strong> Para habilitarla se requiere política de gobernanza aprobada, migración verificada, política de retención, aviso de privacidad y configuración de acceso de revisores.</div>
    :!session?<div className="legal-notice"><LockKeyhole aria-hidden="true"/> Inicia sesión con Auth0 para comprobar tu autorización de revisión.<div className="form-actions"><a className="button button-primary" href="/api/auth/login?returnTo=%2Fvetra%2Frevision">Iniciar sesión <ArrowUpRight aria-hidden="true"/></a></div></div>
