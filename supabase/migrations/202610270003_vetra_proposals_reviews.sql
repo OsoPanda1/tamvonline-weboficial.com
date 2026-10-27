@@ -107,7 +107,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 begin
   update public.tamv_vetra_proposals
      set submitted_by_tamv_id = null,
@@ -116,7 +116,7 @@ begin
    where submitted_by_tamv_id = old.tamv_id;
   return old;
 end;
-$;
+$$;
 
 revoke all on function public.tamv_vetra_anonymize_on_member_delete() from public, anon, authenticated;
 grant execute on function public.tamv_vetra_anonymize_on_member_delete() to service_role;
