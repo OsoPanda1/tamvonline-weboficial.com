@@ -9,7 +9,7 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - Institutional identity: mission, vision, founder profile, purpose, areas of work, membership, governance and editorial principles.
 - TAMV ID: Auth0-based sign-in, private-by-default profile and Supabase-backed persistent identifier registry. TAMV ID is internal to this platform and is not a replacement for ORCID, ISNI, DOI or government identity.
 - Public discovery: catalogue, research/publication index, resource directory and contributor guide.
-- Federated research search: public metadata search through OpenAlex, Crossref and DataCite, plus ROR organization lookup.
+- Federated research search: public metadata search through OpenAlex, Crossref, DataCite, OpenAIRE Graph and PubMed/NCBI, plus ROR organization lookup.
 - DOI metadata audit: compares Crossref, DataCite and OpenAlex records, returns per-provider states, shows missing metadata and calculates an evidence-readiness/transfer-triage score.
 - IP discovery: EPO Open Patent Services searches when server-side credentials are configured, plus official manual links to USPTO, WIPO PATENTSCOPE, Espacenet and Google Patents.
 - Optional provenance snapshots: SHA-256 of the exact generated DOI-audit JSON and optional persistence in Supabase for a registered TAMV member.
@@ -29,7 +29,7 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - app/page.tsx: institutional homepage.
 - app/auditoria/page.tsx: federated research search, DOI audit, patent/IP panel, API map and Isabella triage display.
 - app/investigacion/page.tsx: public record index with explicit source-evidence boundaries.
-- app/api/research/search/route.ts: OpenAlex, Crossref, DataCite and ROR search adapters.
+- app/api/research/search/route.ts: OpenAlex, Crossref, DataCite, OpenAIRE, PubMed/NCBI and ROR search adapters.
 - app/api/research/audit/route.ts: DOI metadata comparison, SHA-256 digest and optional Supabase snapshot.
 - app/api/research/patents/route.ts: EPO OPS OAuth connector plus official manual IP-search links.
 - lib/research-engine.ts: DOI normalization and deterministic evidence-readiness model.
@@ -59,8 +59,12 @@ The static App validator is source inspection, not a runtime/API test. Browser w
 | OpenAlex | Active public metadata query | Data coverage and citations depend on provider records. |
 | Crossref | Active public metadata query | Publisher/registrant deposit metadata; not a peer-review verdict. |
 | DataCite | Active public DOI query | Public API exposes Findable records. |
+| OpenAIRE Graph | Active public metadata search | Up to 8 results per request; public API rate limits and field coverage apply. |
+| PubMed / NCBI | Active metadata search via E-utilities | Metadata only; not clinical advice or bulk full-text retrieval. Optional NCBI API key. |
 | ROR | Active organization lookup | Search result does not establish eligibility for a ROR ID. |
 | ORCID / OSF | Linked/documented, not automatically queried in this release | API credentials, OAuth, scope and permission review required. |
+| Dimensions | Link/documentation only | Analytics API access and intended usage depend on subscription/entitlement. |
+| Lounge.ai | Public source links only | Market data and benchmarks are provider-reported; no general-purpose API connector is active in this build. |
 | EPO OPS | Optional server-side connector | Requires EPO_OPS_KEY and EPO_OPS_SECRET from a registered app. |
 | USPTO ODP | Link-only/pending adapter | Requires API key and an enabled, validated endpoint. This build does not claim automated general patent search there. |
 | WIPO PATENTSCOPE | Manual portal link only | WIPO terms prohibit automated search queries and scraping. |
