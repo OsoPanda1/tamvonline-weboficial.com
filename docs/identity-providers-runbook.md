@@ -30,7 +30,7 @@ If the connection name is blank, the page says GitHub is not configured; the app
 
 This requires a functioning upstream OIDC connection in Auth0 and AUTH0_ORCID_CONNECTION. Setting that environment variable alone does not create or validate the connection. ORCID may not provide a verified email that meets TAMV's membership policy, so a researcher may need to register by email/GitHub first and link ORCID afterwards.
 
-### Direct ORCID OAuth linking for a registered TAMV ID
+### Direct ORCID OAuth verification before registration and linking to TAMV ID
 
 1. Obtain ORCID OAuth credentials for the application from the ORCID registry.
 2. Register the exact HTTPS redirect URI: APP_BASE_URL/api/orcid/callback.
