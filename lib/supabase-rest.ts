@@ -439,3 +439,11 @@ export async function linkVerifiedOrcidIdentity(auth0Sub:string, orcidUrl:string
   if(!Array.isArray(rows)||!rows[0]?.tamv_id||rows[0].verification_status!=="verified")throw new Error("Supabase did not confirm the ORCID link.");
   return rows[0];
 }
+
+
+export async function getOrcidOwners(orcidUrl: string): Promise<Array<{tamv_id:string;verification_status:string}>> {
+  if (!/^https:\/\/orcid\.org\/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(orcidUrl)) throw new Error("Invalid canonical ORCID URL.");
+  return supabaseFetch<Array<{tamv_id:string;verification_status:string}>>(
+    `tamv_member_identifiers?select=tamv_id,verification_status&scheme=eq.ORCID&normalized_value=eq.${encodeURIComponent(orcidUrl.toLowerCase())}&limit=10`,
+  );
+}
