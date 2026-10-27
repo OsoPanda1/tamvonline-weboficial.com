@@ -10,7 +10,7 @@ export default async function AccountPage() {
   const session = await currentServerSession();
   if (!session) return <main><header className="site-header"><Link className="brand-lockup" href="/"><span className="brand-monogram">T</span><span className="brand-wording"><strong>TAMV</strong><small>ONLINE NETWORK</small></span></Link><Link className="button button-ghost" href="/registro">Crear cuenta</Link></header><section className="form-shell"><div className="form-intro"><p className="eyebrow">ÁREA PERSONAL</p><h1>Accede a tu TAMV ID.</h1><p>Inicia sesión mediante Auth0 para consultar o actualizar tu ficha.</p><a className="button button-primary" href="/api/auth/login?returnTo=%2Fcuenta">Iniciar sesión</a></div></section></main>;
 
-  let member = null;
+  let member: Awaited<ReturnType<typeof getMemberByAuth0Sub>> = null;
   let identifiers: Awaited<ReturnType<typeof getIdentifiers>> = [];
   let lookupError = false;
   try {
