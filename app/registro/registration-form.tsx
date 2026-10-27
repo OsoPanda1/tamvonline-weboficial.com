@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, CheckCircle2, Copy, ExternalLink, Fingerprint, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Copy, ExternalLink, Fingerprint, Github, ShieldCheck, Mail } from 'lucide-react';
 
 type Props = {
   authenticated: boolean;
@@ -18,14 +18,14 @@ const areas = [
 ];
 
 const authErrors: Record<string, string> = {
-  login_cancelled: 'El proceso de inicio de sesión fue cancelado.',
+  login_cancelled: 'El proceso de inicio de sesión fue cancelado.',\n  github_provider_unconfigured: 'GitHub aún no está conectado al tenant Auth0. El administrador debe configurar la conexión y su callback antes de habilitar este acceso.',\n  orcid_provider_unconfigured: 'La entrada mediante ORCID requiere una conexión OIDC registrada en Auth0. Puedes crear tu cuenta con correo/GitHub y después vincular tu ORCID con OAuth oficial.',\n  orcid_link_requires_verified_account: 'Para vincular ORCID se requiere una sesión con correo verificado.',\n  orcid_link_requires_tamv_id: 'Completa primero tu ficha TAMV ID y después vincula el ORCID autenticado.',
   invalid_oauth_state: 'No se pudo validar el flujo seguro de autenticación. Vuelve a intentarlo.',
   token_exchange_failed: 'El proveedor de identidad no completó la autenticación.',
   missing_identity_token: 'No se recibió la prueba de identidad esperada.',
   authentication_failed: 'La autenticación no pudo verificarse. Intenta otra vez.',
 };
 
-export default function RegistrationForm({ authenticated, name, email, emailVerified, callbackError }: Props) {
+export default function RegistrationForm({ authenticated, name, email, emailVerified, callbackError, githubConnectionAvailable, orcidConnectionAvailable }: Props) {
   const [displayName, setDisplayName] = useState(name || '');
   const [bio, setBio] = useState('');
   const [affiliation, setAffiliation] = useState('');
@@ -98,7 +98,12 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <p className="subtext">TAMV no solicita una contraseña nueva dentro de este sitio. El inicio de sesión se realiza en el proveedor de identidad. Después podrás completar tu perfil y aceptar los términos correspondientes.</p>
       {error && <div className="form-alert error" role="alert">{error}</div>}
       <div className="form-alert"><strong>Privacidad desde el diseño</strong><br />El formulario de perfil no se abre hasta establecer una sesión autenticada. El registro exige correo verificado y consentimiento explícito para cualquier perfil público.</div>
-      <div className="form-actions"><a className="button button-primary" href="/api/auth/login?screen_hint=signup&returnTo=%2Fregistro">Crear cuenta / continuar con Auth0 <ArrowRight aria-hidden="true" /></a><a className="button button-ghost" href="/api/auth/login?returnTo=%2Fregistro">Ya tengo cuenta</a></div>
+      <div className="form-provider-actions">
+        <a className="button button-primary" href="/api/auth/login?screen_hint=signup&returnTo=%2Fregistro"><Mail aria-hidden="true"/> Crear cuenta con correo <ArrowRight aria-hidden="true" /></a>
+        <a className="button button-ghost" href="/api/auth/login?returnTo=%2Fregistro"><Mail aria-hidden="true"/> Entrar con correo</a>
+        {githubConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=github&screen_hint=signup&returnTo=%2Fregistro"><Github aria-hidden="true"/> Continuar con GitHub</a> : <div className="provider-unavailable"><Github aria-hidden="true"/><span><strong>GitHub · pendiente de conexión</strong><small>Se activa al configurar AUTH0_GITHUB_CONNECTION y comprobar el callback.</small></span></div>}
+        {orcidConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=orcid&screen_hint=signup&returnTo=%2Fregistro"><Fingerprint aria-hidden="true"/> Continuar con ORCID</a> : <div className="provider-unavailable"><Fingerprint aria-hidden="true"/><span><strong>ORCID · conexión de inicio pendiente</strong><small>Puedes vincular tu ORCID verificado por OAuth después de crear la cuenta. La conexión OIDC de acceso se configura por separado.</small></span></div>}
+      </div>
     </div>;
   }
 
@@ -128,7 +133,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="field"><label htmlFor="affiliation">Afiliación declarada</label><input id="affiliation" name="affiliation" maxLength={180} value={affiliation} onChange={(e)=>setAffiliation(e.target.value)} placeholder="Organización o independiente" /><span className="help">Se registra como declaración de la persona, no como aval validado.</span></div>
       <div className="field field-wide"><label htmlFor="bio">Biografía breve</label><textarea id="bio" name="bio" maxLength={600} value={bio} onChange={(e)=>setBio(e.target.value)} placeholder="Áreas de trabajo, intereses y contribuciones (máximo 600 caracteres)." /><span className="help">{bio.length}/600 caracteres.</span></div>
       <div className="field field-wide"><span className="field-label">Áreas de interés (máximo ocho)</span><div className="check-grid">{areas.map((area)=><label className="check-row" key={area}><input type="checkbox" checked={researchAreas.includes(area)} onChange={()=>toggleArea(area)} disabled={!researchAreas.includes(area)&&researchAreas.length>=8} /><span>{area}</span></label>)}</div></div>
-      <div className="field"><label htmlFor="orcid">ORCID (opcional)</label><input id="orcid" name="orcid" value={orcid} onChange={(e)=>setOrcid(e.target.value)} maxLength={200} placeholder="0000-0002-1825-0097" /><span className="help">Se valida el formato y checksum; la titularidad no se verifica automáticamente.</span></div>
+      <div className="field"><label htmlFor="orcid">ORCID (opcional)</label><input id="orcid" name="orcid" value={orcid} onChange={(e)=>setOrcid(e.target.value)} maxLength={200} placeholder="0000-0002-1825-0097" /><span className="help">El formato y checksum se validan, pero escribir un ORCID solo lo registra como declarado. Para marcarlo como verificado, usa la vinculación OAuth desde Mi cuenta.</span></div>
       <div className="field"><label htmlFor="isni">ISNI (opcional)</label><input id="isni" name="isni" value={isni} onChange={(e)=>setIsni(e.target.value)} maxLength={200} placeholder="0000 0001 2281 955X" /><span className="help">Se registra como declarado hasta realizar una comprobación independiente.</span></div>
       <div className="field"><label htmlFor="githubUrl">Perfil GitHub (opcional)</label><input id="githubUrl" name="githubUrl" type="url" value={githubUrl} onChange={(e)=>setGithubUrl(e.target.value)} maxLength={500} placeholder="https://github.com/usuario" /></div>
       <div className="field"><label htmlFor="websiteUrl">Sitio personal (opcional)</label><input id="websiteUrl" name="websiteUrl" type="url" value={websiteUrl} onChange={(e)=>setWebsiteUrl(e.target.value)} maxLength={500} placeholder="https://ejemplo.org" /></div>
