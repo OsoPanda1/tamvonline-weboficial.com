@@ -7,8 +7,8 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 ## Main capabilities
 
 - Institutional identity: mission, vision, founder profile, purpose, areas of work, membership, governance and editorial principles.
-- TAMV ID: Auth0 Authorization Code + PKCE sign-in/signup, private-by-default profile and Supabase-backed persistent identifier registry. Email login is available when the Auth0 tenant is configured. GitHub can be enabled as an Auth0 upstream connection. ORCID can be linked through direct OAuth to a registered member; a manually typed ORCID is only declared, not verified. TAMV ID is not a replacement for ORCID, ISNI, DOI or government identity.
-- Public discovery: catalogue, research/publication index, resource directory and contributor guide.
+- TAMV ID: Auth0 Authorization Code + PKCE sign-in/signup, private-by-default profile editing/prefill and Supabase-backed persistent identifier registry. Email signup/login depends on the configured Auth0 email connection. GitHub authentication is available through a separately enabled Auth0 social connection. ORCID supports an OAuth-first registration handoff followed by Auth0 verified-email signup/login, as well as linking from an existing account. A manually typed ORCID remains declared, not verified. TAMV ID is not a replacement for ORCID, ISNI, DOI or government identity.
+- Public discovery: catalogue, research/publication index, searchable researcher/developer directory, resource directory and contributor guide. The community directory only shows approved profiles with explicit public-profile consent.
 - Federated research search: public metadata search through OpenAlex, Crossref, DataCite, OpenAIRE Graph and PubMed/NCBI, plus ROR organization lookup.
 - DOI metadata audit: compares Crossref, DataCite and OpenAlex records, returns per-provider states, shows missing metadata and calculates an evidence-readiness/transfer-triage score.
 - IP discovery: EPO Open Patent Services searches when server-side credentials are configured, plus official manual links to USPTO, WIPO PATENTSCOPE, Espacenet and Google Patents.
@@ -31,12 +31,16 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 ## Key paths
 
 - app/page.tsx: institutional homepage.
+- app/components/site-header.tsx: shared responsive navigation with keyboard-operable details-based dropdown menus and session-aware account/signup actions.
+- app/comunidad/page.tsx and app/comunidad/community-directory.tsx: searchable public researcher directory, backed only by actual approved, consented member profiles and verified identifiers.
 - app/auditoria/page.tsx: federated research search, DOI audit, patent/IP panel, API map and Isabella triage display.
 - app/investigacion/page.tsx: public record index with explicit source-evidence boundaries.
 - app/hcu/page.tsx: public HCU transformation-universe page.
 - app/hcu/hcu-universe.tsx: interactive canvas, selected-node inspector, local simulation controls and metadata lookup via the existing research API.
 - lib/hcu-model.ts: six domains, initial entity seeds, hyperedge hypotheses and public research catalog links.
-- app/api/orcid/connect/route.ts and app/api/orcid/callback/route.ts: direct ORCID OAuth linking for a signed-in member; secrets remain server-side.
+- app/api/orcid/connect/route.ts and app/api/orcid/callback/route.ts: ORCID OAuth-first registration handoff and authenticated member linking; secrets remain server-side.
+- app/api/orcid/pending/route.ts: cancel the short-lived ORCID-first handoff.
+- app/api/members/register/route.ts: authenticated member/profile upsert, consent validation and ORCID-ownership checks.
 - app/api/research/search/route.ts: OpenAlex, Crossref, DataCite, OpenAIRE, PubMed/NCBI and ROR search adapters.
 - app/api/research/audit/route.ts: DOI metadata comparison, SHA-256 digest and optional Supabase snapshot.
 - app/api/research/patents/route.ts: EPO OPS OAuth connector plus official manual IP-search links.
