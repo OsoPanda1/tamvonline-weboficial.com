@@ -26,10 +26,11 @@ type HcuEvidenceResponse={
  methodology:string;error?:string;
 };
 const domainColor=Object.fromEntries(hcuDomains.map(domain=>[domain.id,domain.color])) as Record<HcuDomainId,string>;
-const AXES:Array<{key:'influence'|'risk'|'evidence'|'uncertainty'|'futurePotential';label:string;short:string}>=[
+const AXES:Array<{key:'influence'|'risk'|'evidence'|'time'|'uncertainty'|'futurePotential';label:string;short:string}>=[
  {key:'influence',label:'Influencia sistémica',short:'X'},
  {key:'risk',label:'Riesgo potencial',short:'Y'},
  {key:'evidence',label:'Cobertura de evidencia',short:'Z'},
+ {key:'time',label:'Horizonte temporal',short:'T'},
  {key:'uncertainty',label:'Incertidumbre',short:'Q'},
  {key:'futurePotential',label:'Potencial de transformación',short:'Ω'},
 ];
@@ -67,6 +68,11 @@ function makeScenarioWeights(year:number){
 
 function projectPoint(node:HcuNode,nodes:HcuNode[],width:number,height:number,rotation:XY,zoom:number,year:number):Point{
  const point=nodePosition(node,nodes,year);
+ const timeProgress=Math.max(0,Math.min(1,(year-2026)/24));
+ // The time control changes the visual projection using illustrative, non-empirical node dimensions.
+ point.x+=(node.axes.futurePotential-.5)*timeProgress*.15;
+ point.y+=(node.axes.influence-.5)*timeProgress*.08;
+ point.z+=(node.axes.uncertainty-.5)*timeProgress*.12;
  const cosY=Math.cos(rotation.x),sinY=Math.sin(rotation.x),cosX=Math.cos(rotation.y),sinX=Math.sin(rotation.y);
  const rx=point.x*cosY-point.z*sinY;
  const rz=point.x*sinY+point.z*cosY;
@@ -335,7 +341,7 @@ export default function HcuUniverse(){
      <p className="hcu-selected-desc">{selected?.description}</p>
      <div className="hcu-inspector-divider"/>
      <div className="hcu-axis-title"><span>ESTADO MULTIDIMENSIONAL</span><span>ÍNDICES DE DEMOSTRACIÓN</span></div>
-     {selected&&<div className="hcu-axis-bars">{AXES.map(axis=><div className="hcu-axis-row" key={axis.key}><div><span>{axis.short}</span><label>{axis.label}</label><b>{Math.round(selected.axes[axis.key]*100)}</b></div><div className="hcu-axis-track"><i style={{width:(selected.axes[axis.key]*100)+'%',background:selectedColor}}/></div></div>)}</div>}
+     {selected&&<div className="hcu-axis-bars">{AXES.map(axis=>{const value=axis.key==='time'?(year-2026)/24:selected.axes[axis.key];return <div className="hcu-axis-row" key={axis.key}><div><span>{axis.short}</span><label>{axis.label}</label><b>{axis.key==='time'?year:Math.round(value*100)}</b></div><div className="hcu-axis-track"><i style={{width:(value*100)+'%',background:selectedColor}}/></div></div>;})}</div>}
      <p className="hcu-axis-disclaimer">Los valores son parámetros de una simulación visual. No proceden de sensores, estudios empíricos, evaluación externa o certificación ISCIR/VETRA.</p>
      <div className="hcu-inspector-divider"/>
      <div className="hcu-inspector-info"><span>ESTADO DE LA EVIDENCIA</span><p><FileCheck2 aria-hidden="true"/>{selected?.evidenceStatus||'Pendiente'}</p>{selected?.sources?.length?<ul>{selected.sources.map(source=><li key={source}>{source}</li>)}</ul>:<small>No hay fuentes específicas vinculadas a esta entidad.</small>}</div>
