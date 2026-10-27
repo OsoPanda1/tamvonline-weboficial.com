@@ -21,8 +21,9 @@ async function epoSearch(query: string): Promise<Record<string, unknown>> {
     const token = await tokenResponse.json() as { access_token?: string };
     if (!token.access_token) return { provider: "EPO OPS", status: "unavailable", note: "No se recibió un token OPS." };
     const cql = `ti="${query.replace(/["\\]/g, " ")}"`;
-    const url = new URL("https://ops.epo.org/3.2/rest-services/published-data/search");
+    const url = new URL("https://ops.epo.org/3.2/rest-services/published-data/search/biblio");
     url.searchParams.set("q", cql);
+    url.searchParams.set("Range", "1-10");
     const searchResponse = await fetch(url.toString(), { headers: { authorization: `Bearer ${token.access_token}`, accept: "application/exchange+xml" }, cache: "no-store", signal: AbortSignal.timeout(9000) });
     const xml = await searchResponse.text();
     if (!searchResponse.ok) return { provider: "EPO OPS", status: "unavailable", note: `La búsqueda OPS devolvió HTTP ${searchResponse.status}.`, url: "https://worldwide.espacenet.com/" };
