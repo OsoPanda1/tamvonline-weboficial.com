@@ -37,6 +37,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
   const [publicProfileConsent, setPublicProfileConsent] = useState(false);
+  const [adultConfirmed, setAdultConfirmed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -54,6 +55,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
     event.preventDefault();
     setError('');
     setResult(null);
+    if (!adultConfirmed) { setError('Confirma que tienes 18 años o más para continuar.'); return; }
     if (!termsAccepted || !privacyAccepted) {
       setError('Acepta los términos y confirma que has leído el aviso de privacidad para continuar.');
       return;
@@ -71,7 +73,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
         cache: 'no-store',
         body: JSON.stringify({
           displayName, bio, affiliation, countryCode, researchAreas, orcid, isni, githubUrl, websiteUrl,
-          visibility, publicProfileConsent, termsAccepted, privacyAccepted,
+          visibility, publicProfileConsent, adultConfirmed, termsAccepted, privacyAccepted,
         }),
       });
       const payload = await response.json();
@@ -132,6 +134,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="field"><label htmlFor="websiteUrl">Sitio personal (opcional)</label><input id="websiteUrl" name="websiteUrl" type="url" value={websiteUrl} onChange={(e)=>setWebsiteUrl(e.target.value)} maxLength={500} placeholder="https://ejemplo.org" /></div>
       <div className="field field-wide"><label htmlFor="visibility">Visibilidad del perfil</label><select id="visibility" name="visibility" value={visibility} onChange={(e)=>setVisibility(e.target.value as 'private'|'public')}><option value="private">Privado — solo yo puedo verlo</option><option value="public">Solicitar perfil público</option></select><span className="help">Los perfiles TAMV públicos solo se resuelven tras aprobación manual. Nunca se publica el correo ni el sujeto interno de Auth0.</span></div>
       {visibility === 'public' && <div className="field field-wide"><label className="check-row"><input type="checkbox" checked={publicProfileConsent} onChange={(e)=>setPublicProfileConsent(e.target.checked)} /><span>Consiento expresamente publicar mi nombre de perfil, biografía, afiliación declarada, país, áreas de interés y enlaces externos seleccionados en la página pública TAMV ID.</span></label></div>}
+      <div className="field field-wide"><label className="check-row"><input type="checkbox" checked={adultConfirmed} onChange={(e)=>setAdultConfirmed(e.target.checked)} required /><span>Confirmo que tengo 18 años o más y que los datos que introduzco son míos o tengo autorización para compartirlos.</span></label></div>
       <div className="field field-wide"><label className="check-row"><input type="checkbox" checked={termsAccepted} onChange={(e)=>setTermsAccepted(e.target.checked)} required /><span>He leído y acepto los <a href="/terminos" target="_blank" rel="noopener noreferrer">Términos de participación</a>, incluidas las reglas de atribución, contribución y conducta. Entiendo que registrarme no garantiza trabajo, remuneración, becas, financiación ni certificación.</span></label></div>
       <div className="field field-wide"><label className="check-row"><input type="checkbox" checked={privacyAccepted} onChange={(e)=>setPrivacyAccepted(e.target.checked)} required /><span>He leído el <a href="/privacidad" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a> y comprendo qué datos se almacenan y con qué finalidad.</span></label></div>
     </div>
