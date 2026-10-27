@@ -8,14 +8,14 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 
 - Institutional identity: mission, vision, founder profile, purpose, areas of work, membership, governance and editorial principles.
 - TAMV ID: Auth0 Authorization Code + PKCE sign-in/signup, private-by-default profile editing/prefill and Supabase-backed persistent identifier registry. Email signup/login depends on the configured Auth0 email connection. GitHub authentication is available through a separately enabled Auth0 social connection. ORCID supports an OAuth-first registration handoff followed by Auth0 verified-email signup/login, as well as linking from an existing account. A manually typed ORCID remains declared, not verified. TAMV ID is not a replacement for ORCID, ISNI, DOI or government identity.
-- Public discovery: catalogue, research/publication index, searchable researcher/developer directory, resource directory and contributor guide. The community directory only shows approved profiles with explicit public-profile consent.
+- Public discovery: catalogue, research/publication index, searchable researcher/developer directory, resource directory and contributor guide. The canonical route is `/miembros`; it only shows approved profiles with explicit public-profile consent. `/comunidad` redirects to `/miembros` for compatibility.
 - Federated research search: public metadata search through OpenAlex, Crossref, DataCite, OpenAIRE Graph and PubMed/NCBI, plus ROR organization lookup.
 - DOI metadata audit: compares Crossref, DataCite and OpenAlex records, returns per-provider states, shows missing metadata and calculates an evidence-readiness/transfer-triage score.
 - IP discovery: EPO Open Patent Services searches when server-side credentials are configured, plus official manual links to USPTO, WIPO PATENTSCOPE, Espacenet and Google Patents.
 - Optional provenance snapshots: SHA-256 of the exact generated DOI-audit JSON and optional persistence in Supabase for a registered TAMV member.
 - VETRA Ω∞: three mandatory gates (integrity/provenance; method/reproducibility; responsibility/rights/impact), fourteen evaluation domains, human review, conflict declarations, appeals and an institutional roadmap.
 - VETRA proposal intake: server-side validation and private Supabase tables for proposals, reviews and decisions. The intake is disabled until migration, privacy/retention policy and governance are approved.
-- TAMV Ω∞ HCU: interactive transformation-map concept with six domains, 25 initial nodes, 7 multi-entity hyperedges, search, risk/evidence views, temporal exploration, local-only Cognitive Pod simulation, snapshot export and federated literature metadata search. HCU axis values and scenarios remain explicitly illustrative.
+- TAMV Ω∞ HCU: interactive transformation-map concept with six domains, 25 initial nodes, 7 multi-entity hyperedges, search, risk/evidence views, temporal exploration, local-only Cognitive Pod simulation, federated literature metadata search, SHA-512 snapshot digest export and local snapshot digest verification. HCU axis values and scenarios remain explicitly illustrative; the digest is not a signature, trusted timestamp, BookPI root or certification.
 - Executive brief, canonical VETRA regulations, quantitative metrics/use cases, technical English foundations and roadmap documents.
 - Automated source checks and production build through GitHub Actions.
 
@@ -32,13 +32,14 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 
 - app/page.tsx: institutional homepage.
 - app/components/site-header.tsx: shared responsive navigation with keyboard-operable details-based dropdown menus and session-aware account/signup actions.
-- app/comunidad/page.tsx and app/comunidad/community-directory.tsx: searchable public researcher directory, backed only by actual approved, consented member profiles and verified identifiers.
+- app/miembros/page.tsx and app/miembros/member-directory.tsx: canonical searchable public researcher directory, backed only by approved, consented member profiles and verified identifiers.
+- app/comunidad/page.tsx: legacy route that redirects to `/miembros`.
 - app/auditoria/page.tsx: federated research search, DOI audit, patent/IP panel, API map and Isabella triage display.
 - app/investigacion/page.tsx: public record index with explicit source-evidence boundaries.
 - app/hcu/page.tsx: public HCU transformation-universe page.
 - app/miembros/page.tsx: public directory of real approved profiles; shows an honest empty state when no public profiles exist.
 - app/miembros/member-directory.tsx: searchable/filterable directory of consented profiles and verified external links.
-- app/hcu/hcu-universe.tsx: interactive canvas, selected-node inspector, local simulation controls and metadata lookup via the existing research API.
+- app/hcu/hcu-universe.tsx: interactive canvas, selected-node inspector, local simulation controls, metadata lookup, JSON snapshot export and browser-local SHA-512 digest verification. Digest matching only confirms the snapshot bytes under the stated serialization rule; it does not prove authorship or claim validity.
 - lib/hcu-model.ts: six domains, initial entity seeds, hyperedge hypotheses and public research catalog links.
 - app/api/orcid/connect/route.ts and app/api/orcid/callback/route.ts: ORCID OAuth-first registration handoff and authenticated member linking; secrets remain server-side.
 - app/api/orcid/pending/route.ts: cancel the short-lived ORCID-first handoff.
@@ -56,7 +57,7 @@ A Next.js App Router site for TAMV Online Network, with a documented institution
 - supabase/tests/tamv_identity_registry_checks.sql and supabase/tests/vetra_review_security_checks.sql: read-only checks of member-table RLS and grants.
 - docs/tamv-id-runbook.md: Auth0, Supabase and TAMV ID setup.
 - docs/identity-providers-runbook.md: GitHub/Auth0 connection, email signup and direct ORCID OAuth configuration and tests.
-- docs/hcu-methodology.md: HCU evidence model, hyperedge requirements and prototype boundaries.
+- docs/hcu-methodology.md: HCU evidence model, hyperedge requirements, snapshot digest semantics and prototype boundaries.
 - docs/research-audit-api-map.md: connector/API map, data access limits, evidence-scoring weights and IP boundaries.
 - docs/vetra-executive-brief.md: executive brief and governance decision requested.
 - docs/CANON-VETRA-OMEGA-INFINITY-2026-V1.0.md: canonical regulations and the three-gate framework.
