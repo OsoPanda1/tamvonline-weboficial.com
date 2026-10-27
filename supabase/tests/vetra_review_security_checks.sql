@@ -5,6 +5,7 @@ declare
   proposals_rls boolean;
   reviews_rls boolean;
   decisions_rls boolean;
+  anonymize_trigger_exists boolean;
   svc_insert_proposals boolean;
   svc_insert_reviews boolean;
   svc_insert_decisions boolean;
@@ -30,6 +31,14 @@ begin
   if coalesce(proposals_rls,false) is not true then raise exception 'FAIL: RLS missing on tamv_vetra_proposals'; end if;
   if coalesce(reviews_rls,false) is not true then raise exception 'FAIL: RLS missing on tamv_vetra_reviews'; end if;
   if coalesce(decisions_rls,false) is not true then raise exception 'FAIL: RLS missing on tamv_vetra_decisions'; end if;
+  select exists (
+    select 1 from pg_trigger t
+    join pg_class c on c.oid=t.tgrelid
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relname='tamv_members'
+      and t.tgname='tamv_vetra_member_delete_anonymize' and not t.tgisinternal
+  ) into anonymize_trigger_exists;
+  if anonymize_trigger_exists is not true then raise exception 'FAIL: VETRA member-deletion anonymization trigger is missing'; end if;
 
   select has_table_privilege('service_role','public.tamv_vetra_proposals','INSERT') into svc_insert_proposals;
   select has_table_privilege('service_role','public.tamv_vetra_reviews','INSERT') into svc_insert_reviews;
