@@ -1,5 +1,6 @@
 import SiteHeader from '@/app/components/site-header';
 import ResearchHcu from './research-hcu';
+import ResearchIntelligence from './research-intelligence';
 import Link from 'next/link';
 import { ArrowUpRight, BookOpen, ExternalLink, FileCheck2, Globe2 } from 'lucide-react';
 
@@ -134,6 +135,7 @@ export default function ResearchPage() {
     <SiteHeader active="/investigacion" />
     <section className="legal-page"><div className="legal-container"><p className="legal-kicker">TRAYECTORIA · INVESTIGACIÓN · DIVULGACIÓN</p><h1>Una trayectoria se fortalece cuando sus fuentes pueden verificarse.</h1><p>Esta página organiza registros públicos, el portafolio profesional compartido por el titular y piezas de divulgación vinculadas con Edwin Oswaldo Castillo Trejo (Anubis Villaseñor) y TAMV Online Network. Separa identificadores y repositorios de artículos de divulgación, materiales autopublicados y evaluaciones académicas.</p><div className="legal-notice"><strong>Nota metodológica.</strong> Un DOI identifica una ficha o recurso, pero no equivale por sí solo a revisión por pares, acreditación, despliegue de software ni aval de la plataforma que lo aloja. Las descripciones de algunos depósitos se citan en páginas del propio proyecto y requieren cotejo con sus registros originales antes de una cita formal.</div><div className="research-summary-grid"><article><BookOpen aria-hidden="true"/><strong>Registros persistentes</strong><p>Zenodo, Figshare y OSF; comprobar metadatos del registro original.</p></article><article><Globe2 aria-hidden="true"/><strong>Divulgación sectorial</strong><p>Artículos en AVIXA Xchange y perfiles profesionales.</p></article><article><FileCheck2 aria-hidden="true"/><strong>Validación diferenciada</strong><p>No se confunde publicación, depósito, prueba y evaluación externa.</p></article></div></div></section>
     <ResearchHcu />
+    <ResearchIntelligence />
     <section className="section-wrap research-records">
       <div className="research-records-heading"><div><p className="eyebrow">ÍNDICE DE FUENTES PÚBLICAS</p><h2>Registros y publicaciones</h2></div><p>Enlaces revisados el 27 de octubre de 2026. El estado se refiere al alcance de esta revisión de fuentes, no a la calidad científica del trabajo.</p></div>
       <div className="research-record-list">{items.map((item,index)=><article key={item.url}><div className="research-record-no">{String(index+1).padStart(2,'0')}</div><div className="research-record-body"><div className="research-item-type">{item.type}</div><h3>{item.title}</h3><div className="research-item-meta"><span>{item.source}</span><span>{item.date}</span></div><p>{item.evidence}</p><div className="research-status"><span>{item.status}</span><a href={item.url} target="_blank" rel="noopener noreferrer">Consultar fuente <ArrowUpRight aria-hidden="true"/></a></div></div></article>)}</div>
