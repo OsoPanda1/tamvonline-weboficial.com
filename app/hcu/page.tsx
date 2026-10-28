@@ -1,7 +1,7 @@
 import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
 import { ArrowUpRight, GitBranch, ShieldCheck } from 'lucide-react';
-import HcuUniverse from '@/components/hcu-universe'; // Ajusta la ruta según la ubicación de tu componente
+import HcuUniverse from './hcu-universe';
 
 export const dynamic = 'force-dynamic';
 
