@@ -1,6 +1,6 @@
 import SiteHeader from '@/app/components/site-header';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, BadgeCheck, Building2, Flag, Globe2, Landmark, Rocket, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BadgeCheck, Building2, CheckCircle2, Flag, Globe2, Landmark, Rocket, ShieldCheck, Users } from 'lucide-react';
 
 export const metadata = {
  title:'Roadmap institucional 2026–2028',

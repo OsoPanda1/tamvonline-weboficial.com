@@ -84,7 +84,7 @@ function projectPoint(node:HcuNode,nodes:HcuNode[],width:number,height:number,ro
  return {x:width/2+rx*scale,y:height/2+ry*scale,z,radius:radius*(.83+perspective*.17)};
 }
 
-export default function HcuUniverse(){
+export default function HcuUniverse({ initialQuery = '' }: { initialQuery?: string }){
  const canvasRef=useRef<HTMLCanvasElement|null>(null);
  const hostRef=useRef<HTMLDivElement|null>(null);
  const rotationRef=useRef<XY>({x:.16,y:-.08});
@@ -94,7 +94,7 @@ export default function HcuUniverse(){
  const [nodes,setNodes]=useState<HcuNode[]>(hcuInitialNodes);
  const [selectedId,setSelectedId]=useState('omega-core');
  const [viewMode,setViewMode]=useState<ViewMode>('topology');
- const [query,setQuery]=useState('');
+ const [query,setQuery]=useState(initialQuery);
  const [year,setYear]=useState(2026);
  const [autoRotate,setAutoRotate]=useState(true);
  const [showLabels,setShowLabels]=useState(true);

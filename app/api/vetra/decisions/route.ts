@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readSessionFromCookie, sameOriginRequest, sessionCookieName } from "@/lib/auth0-native";
 import {
-  createVetraDecision, getMemberByAuth0Sub, getVetraProposalStatus, getVetraLatestReviewsForDecision,
+  createVetraDecision, getMemberByAuth0Sub, getVetraProposalStatus, getVetraLatestReviewsForDecision, getVetraReviewQueue,
   SupabaseConfigurationError,
 } from "@/lib/supabase-rest";
 
