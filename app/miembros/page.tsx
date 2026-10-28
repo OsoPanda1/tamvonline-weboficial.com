@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import SiteHeader from '@/app/components/site-header';
-import { ArrowRight, ArrowUpRight, CircleAlert, Users } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, CircleAlert, ShieldCheck, Users } from 'lucide-react';
 import { getPublicMembers, SupabaseConfigurationError } from '@/lib/supabase-rest';
 import MemberDirectory from './member-directory';
 

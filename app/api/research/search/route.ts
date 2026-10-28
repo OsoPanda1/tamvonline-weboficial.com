@@ -15,7 +15,7 @@ type PubMedSummaryResponse = { result?: { uids?: string[]; [key: string]: unknow
 function cap(value: unknown, max = 240): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
-function arr(value: unknown): unknown[] { return Array.isArray(value) ? value : []; }
+function arr(value: unknown): any[] { return Array.isArray(value) ? value : []; }
 function safeExternalUrl(value: unknown, fallback = ""): string {
   if (typeof value !== "string") return fallback;
   try { const u = new URL(value); return u.protocol === "https:" ? u.toString() : fallback; } catch { return fallback; }

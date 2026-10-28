@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, CheckCircle2, Copy, ExternalLink, Fingerprint, Github, ShieldCheck, Mail } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Copy, ExternalLink, Fingerprint, GitBranch, ShieldCheck, Mail } from 'lucide-react';
 
 type Props = {
   authenticated: boolean;
@@ -49,7 +49,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
   const [researchAreas, setResearchAreas] = useState<string[]>(initialProfile?.researchAreas || []);
   const [orcid, setOrcid] = useState(pendingOrcid || initialIdentifiers.find(item=>item.scheme==='ORCID')?.value || '');
   const [isni, setIsni] = useState(initialIdentifiers.find(item=>item.scheme==='ISNI')?.value || '');
-  const [githubUrl, setGithubUrl] = useState(initialIdentifiers.find(item=>item.scheme==='GITHUB')?.value || '');
+  const [githubUrl, setGitBranchUrl] = useState(initialIdentifiers.find(item=>item.scheme==='GITHUB')?.value || '');
   const [websiteUrl, setWebsiteUrl] = useState(initialIdentifiers.find(item=>item.scheme==='WEBSITE')?.value || '');
   const [visibility, setVisibility] = useState<'private' | 'public'>(initialProfile?.visibility || 'private');
   const [publicProfileConsent, setPublicProfileConsent] = useState(initialProfile?.publicProfileConsent || false);
@@ -119,7 +119,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="form-provider-actions">
         <a className="button button-primary" href="/api/auth/login?screen_hint=signup&returnTo=%2Fregistro"><Mail aria-hidden="true"/> Crear cuenta con correo <ArrowRight aria-hidden="true" /></a>
         <a className="button button-ghost" href="/api/auth/login?returnTo=%2Fregistro"><Mail aria-hidden="true"/> Entrar con correo</a>
-        {githubConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=github&screen_hint=signup&returnTo=%2Fregistro"><Github aria-hidden="true"/> Continuar con GitHub</a> : <div className="provider-unavailable"><Github aria-hidden="true"/><span><strong>GitHub · pendiente de conexión</strong><small>Se activa al configurar AUTH0_GITHUB_CONNECTION y comprobar el callback.</small></span></div>}
+        {githubConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=github&screen_hint=signup&returnTo=%2Fregistro"><GitBranch aria-hidden="true"/> Continuar con GitHub</a> : <div className="provider-unavailable"><GitBranch aria-hidden="true"/><span><strong>GitHub · pendiente de conexión</strong><small>Se activa al configurar AUTH0_GITHUB_CONNECTION y comprobar el callback.</small></span></div>}
         {orcidOAuthConfigured ? <a className="button button-ghost" href="/api/orcid/connect?mode=signup&returnTo=%2Fregistro"><Fingerprint aria-hidden="true"/> Verificar ORCID para registrarme</a> : orcidConnectionAvailable ? <a className="button button-ghost" href="/api/auth/login?provider=orcid&screen_hint=signup&returnTo=%2Fregistro"><Fingerprint aria-hidden="true"/> Continuar con ORCID</a> : <div className="provider-unavailable"><Fingerprint aria-hidden="true"/><span><strong>ORCID · pendiente de credenciales</strong><small>Configura ORCID_CLIENT_ID y ORCID_CLIENT_SECRET para autenticar tu iD. El correo se valida por separado.</small></span></div>}
       </div>
     </div>;
@@ -156,7 +156,7 @@ export default function RegistrationForm({ authenticated, name, email, emailVeri
       <div className="field field-wide"><span className="field-label">Áreas de interés (máximo ocho)</span><div className="check-grid">{areas.map((area)=><label className="check-row" key={area}><input type="checkbox" checked={researchAreas.includes(area)} onChange={()=>toggleArea(area)} disabled={!researchAreas.includes(area)&&researchAreas.length>=8} /><span>{area}</span></label>)}</div></div>
       <div className="field"><label htmlFor="orcid">ORCID (opcional)</label><input id="orcid" name="orcid" value={orcid} onChange={(e)=>setOrcid(e.target.value)} maxLength={200} placeholder="0000-0002-1825-0097" readOnly={Boolean(pendingOrcid)} /><span className="help">{pendingOrcid ? "Este ORCID acaba de autenticarse por OAuth y se vinculará al guardar el registro junto con el correo verificado." : "El formato y checksum se validan, pero escribir un ORCID solo lo registra como declarado. Para marcarlo como verificado, usa la vinculación OAuth desde Mi cuenta."}</span></div>
       <div className="field"><label htmlFor="isni">ISNI (opcional)</label><input id="isni" name="isni" value={isni} onChange={(e)=>setIsni(e.target.value)} maxLength={200} placeholder="0000 0001 2281 955X" /><span className="help">Se registra como declarado hasta realizar una comprobación independiente.</span></div>
-      <div className="field"><label htmlFor="githubUrl">Perfil GitHub (opcional)</label><input id="githubUrl" name="githubUrl" type="url" value={githubUrl} onChange={(e)=>setGithubUrl(e.target.value)} maxLength={500} placeholder="https://github.com/usuario" /></div>
+      <div className="field"><label htmlFor="githubUrl">Perfil GitHub (opcional)</label><input id="githubUrl" name="githubUrl" type="url" value={githubUrl} onChange={(e)=>setGitBranchUrl(e.target.value)} maxLength={500} placeholder="https://github.com/usuario" /></div>
       <div className="field"><label htmlFor="websiteUrl">Sitio personal (opcional)</label><input id="websiteUrl" name="websiteUrl" type="url" value={websiteUrl} onChange={(e)=>setWebsiteUrl(e.target.value)} maxLength={500} placeholder="https://ejemplo.org" /></div>
       <div className="field field-wide"><label htmlFor="visibility">Visibilidad del perfil</label><select id="visibility" name="visibility" value={visibility} onChange={(e)=>setVisibility(e.target.value as 'private'|'public')}><option value="private">Privado — solo yo puedo verlo</option><option value="public">Solicitar perfil público</option></select><span className="help">Los perfiles TAMV públicos solo se resuelven tras aprobación manual. Nunca se publica el correo ni el sujeto interno de Auth0.</span></div>
       {visibility === 'public' && <div className="field field-wide"><label className="check-row"><input type="checkbox" checked={publicProfileConsent} onChange={(e)=>setPublicProfileConsent(e.target.checked)} /><span>Consiento expresamente publicar mi nombre de perfil, biografía, afiliación declarada, país, áreas de interés y enlaces externos seleccionados en la página pública TAMV ID.</span></label></div>}
