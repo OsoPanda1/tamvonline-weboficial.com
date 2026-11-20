@@ -9,6 +9,9 @@ type CrossrefResponse = { message?: { items?: Array<Record<string, unknown>> } }
 type DataCiteResponse = { data?: Array<{ id?: string; attributes?: Record<string, unknown> }> };
 type RorResponse = { items?: Array<Record<string, unknown>> };
 type OpenAireResponse = { results?: Array<Record<string, unknown>>; header?: Record<string, unknown> };
+type ZenodoResponse = { hits?: { total?: number | { value?: number }; hits?: Array<Record<string, unknown>> } };
+type FigshareResponse = Array<Record<string, unknown>>;
+type OsfResponse = { data?: Array<{ id?: string; attributes?: Record<string, unknown>; links?: Record<string, unknown> }> };
 type PubMedSearchResponse = { esearchresult?: { idlist?: string[] } };
 type PubMedSummaryResponse = { result?: { uids?: string[]; [key: string]: unknown } };
 
@@ -240,6 +243,85 @@ async function searchPubMed(q: string): Promise<{ items: ResearchItem[]; state: 
   return { items: rows, state: { id: "pubmed", name: "PubMed / NCBI", status: rows.length ? "ok" : "empty", count: rows.length, note: "Consulta de metadatos a través de NCBI E-utilities; los derechos del texto completo dependen del artículo y de PMC." } };
 }
 
+async function searchZenodo(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
+  const url = new URL("https://zenodo.org/api/records");
+  url.searchParams.set("q", q);
+  url.searchParams.set("size", "5");
+  url.searchParams.set("sort", "mostrecent");
+  const response = await fetchJson<ZenodoResponse>(url.toString());
+  if (!response.ok || !response.data) return { items: [], state: { id: "zenodo", name: "Zenodo", status: "unavailable", count: 0, note: response.error } };
+  const records = arr(response.data.hits?.hits);
+  const items = records.flatMap((record) => {
+    const metadata = (record.metadata || {}) as Record<string, unknown>;
+    const authors = arr(metadata.creators).flatMap((creator) => {
+      const name = cap((creator as Record<string, unknown>)?.name, 120);
+      return name ? [name] : [];
+    });
+    const doi = cap(metadata.doi).replace(/^https?:\/\/doi\.org\//i, "") || null;
+    const links = (record.links || {}) as Record<string, unknown>;
+    const license = (metadata.license || {}) as Record<string, unknown>;
+    const normalized = metadataResult({
+      id: `zenodo:${cap(record.id)}`, provider: "Zenodo", title: cap(metadata.title, 600),
+      url: safeExternalUrl(links.html, doi ? `https://doi.org/${doi}` : `https://zenodo.org/records/${encodeURIComponent(cap(record.id))}`),
+      doi, year: yearFromDate(metadata.publication_date), authors,
+      venue: cap(metadata.publisher) || null, resourceType: cap((metadata.resource_type as Record<string, unknown> | undefined)?.title) || null,
+      license: cap(license.title || license.id) || null,
+      evidenceClass: "Depósito de investigación en Zenodo; la presencia de un registro no demuestra arbitraje ni validación independiente.",
+    });
+    return normalized ? [normalized] : [];
+  });
+  const total = typeof response.data.hits?.total === "number" ? response.data.hits.total : Number((response.data.hits?.total as { value?: number } | undefined)?.value);
+  return { items, state: { id: "zenodo", name: "Zenodo", status: items.length ? "ok" : "empty", count: items.length, note: `API pública; ${Number.isFinite(total) ? total : "total no reportado"} coincidencias.` } };
+}
+
+async function searchFigshare(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
+  const response = await fetchJson<FigshareResponse>("https://api.figshare.com/v2/articles/search", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ search_for: q, page: 1, page_size: 5, order: "published_date", order_direction: "desc" }),
+  });
+  if (!response.ok || !response.data) return { items: [], state: { id: "figshare", name: "Figshare", status: "unavailable", count: 0, note: response.error } };
+  const items = arr(response.data).flatMap((record) => {
+    const doi = cap(record.doi).replace(/^https?:\/\/doi\.org\//i, "") || null;
+    const authors = arr(record.authors).flatMap((author) => {
+      const name = cap((author as Record<string, unknown>)?.full_name || (author as Record<string, unknown>)?.name, 120);
+      return name ? [name] : [];
+    });
+    const license = (record.license || {}) as Record<string, unknown>;
+    const normalized = metadataResult({
+      id: `figshare:${cap(record.id)}`, provider: "Figshare", title: cap(record.title, 600),
+      url: safeExternalUrl(record.url_public_html || record.url, doi ? `https://doi.org/${doi}` : ""), doi,
+      year: yearFromDate(record.published_date || record.created_date), authors,
+      venue: cap(record.publisher_name) || null, resourceType: cap(record.item_type) || "Research output",
+      license: cap(license.name || license.title) || null,
+      evidenceClass: "Registro de resultados de investigación en Figshare; el depósito no implica revisión por pares.",
+    });
+    return normalized ? [normalized] : [];
+  });
+  return { items, state: { id: "figshare", name: "Figshare", status: items.length ? "ok" : "empty", count: items.length, note: "API pública de metadatos de artículos y otros resultados depositados." } };
+}
+
+async function searchOsf(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
+  const url = new URL("https://api.osf.io/v2/nodes/");
+  url.searchParams.set("filter[title]", q);
+  url.searchParams.set("page[size]", "5");
+  const response = await fetchJson<OsfResponse>(url.toString());
+  if (!response.ok || !response.data) return { items: [], state: { id: "osf", name: "OSF", status: "unavailable", count: 0, note: response.error } };
+  const items = arr(response.data.data).flatMap((node) => {
+    const attributes = node.attributes || {};
+    const normalized = metadataResult({
+      id: `osf:${cap(node.id)}`, provider: "OSF", title: cap(attributes.title, 600),
+      url: safeExternalUrl((node.links || {}).html, `https://osf.io/${encodeURIComponent(cap(node.id))}/`),
+      doi: cap(attributes.article_doi) || null, year: yearFromDate(attributes.date_created),
+      authors: [], venue: cap(attributes.category) || null,
+      resourceType: Array.isArray(attributes.node_license) ? "Research project" : "Open project",
+      evidenceClass: "Proyecto o registro público en OSF; su existencia no certifica revisión por pares ni que el proyecto esté activo.",
+    });
+    return normalized ? [normalized] : [];
+  });
+  const total = Number((response.data as OsfResponse & { links?: { meta?: { total?: number } } }).links?.meta?.total);
+  return { items, state: { id: "osf", name: "OSF", status: items.length ? "ok" : "empty", count: items.length, note: `API pública de proyectos; ${Number.isFinite(total) ? total : "total no reportado"} coincidencias por título.` } };
+}
+
 async function searchRor(q: string): Promise<{ items: ResearchItem[]; state: ProviderState }> {
   const url = new URL("https://api.ror.org/v2/organizations");
   url.searchParams.set("query", q);
@@ -274,7 +356,7 @@ export async function POST(request: Request) {
   const type = body.type === "organizations" ? "organizations" : "research";
   const results = type === "organizations"
     ? [await searchRor(query)]
-    : await Promise.all([searchOpenAlex(query), searchCrossref(query), searchDataCite(query), searchOpenAire(query), searchPubMed(query)]);
+    : await Promise.all([searchOpenAlex(query), searchCrossref(query), searchDataCite(query), searchOpenAire(query), searchPubMed(query), searchZenodo(query), searchFigshare(query), searchOsf(query)]);
   const combined = results.flatMap((x) => x.items).slice(0, 30);
   const unique = new Map<string, ResearchItem>();
   for (const item of combined) {
@@ -292,6 +374,15 @@ export async function POST(request: Request) {
       openAire: `https://explore.openaire.eu/search/publication?search=${encodeURIComponent(query)}`,
       dimensions: `https://app.dimensions.ai/discover/publication?search_text=${encodeURIComponent(query)}`,
       pubmed: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(query)}`,
+      zenodo: `https://zenodo.org/search?q=${encodeURIComponent(query)}`,
+      figshare: `https://figshare.com/search?q=${encodeURIComponent(query)}`,
+      osf: `https://osf.io/search/?q=${encodeURIComponent(query)}`,
+      frontiers: `https://www.frontiersin.org/search?query=${encodeURIComponent(query)}`,
+      worldEconomicForum: `https://www.weforum.org/search/?query=${encodeURIComponent(query)}`,
+      researchGate: `https://www.researchgate.net/search/publication?q=${encodeURIComponent(query)}`,
+      neonForum: `https://community.neon.tech/search?q=${encodeURIComponent(query)}`,
+      openAiForum: `https://community.openai.com/search?q=${encodeURIComponent(query)}`,
+      googleDevelopers: `https://discuss.google.dev/search?q=${encodeURIComponent(query)}`,
     },
   }, { headers: { "cache-control": "no-store" } });
 }

@@ -6,6 +6,7 @@ type Props={active?:string};
 
 const groups=[
  {label:'Investigación',key:'research',items:[
+  {href:'/meta',label:'TAMV Meta · Lounge de conocimiento'},
   {href:'/investigacion',label:'Producción y registros'},
   {href:'/catalogo',label:'Catálogo de conocimiento'},
   {href:'/auditoria',label:'Auditoría de evidencia e IP'},
