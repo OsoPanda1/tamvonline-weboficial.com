@@ -53,11 +53,11 @@ export default function IsabellaChat() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ messages: nextMessages.map(({ role, content: text }) => ({ role, content: text })), lens }),
       })
-      const data = (await response.json()) as { answer?: string; error?: string }
+      const data = (await response.json()) as { answer?: string; error?: string; model?: string }
       if (!response.ok) throw new Error(data.error || 'No se pudo completar la conversación.')
       const assistantMessage: Message = { id: crypto.randomUUID(), role: 'assistant', content: data.answer || 'No se recibió una respuesta.' }
       setMessages((current) => [...current, assistantMessage].slice(-20))
-      setNotice('Respuesta generada por AI Gateway. Sin memoria entre sesiones.')
+      setNotice(`Modelo abierto gratuito: ${data.model || 'AI Gateway'}. Sin memoria entre sesiones.`)
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'No se pudo completar la conversación.'
       setError(message)
@@ -94,7 +94,7 @@ export default function IsabellaChat() {
       <div className="isabella-chat-panel">
         <div className="isabella-chat-topbar">
           <div className="isabella-presence"><span className="isabella-presence-mark"><BrainCircuit aria-hidden="true" /></span><span><strong>ISABELLA</strong><small>ASISTENTE DE TEXTO · TAMV</small></span></div>
-          <div className="isabella-top-actions"><span className="isabella-model-badge"><span aria-hidden="true" /> Gemini · AI Gateway</span><button className="isabella-clear-button" type="button" onClick={clearConversation} disabled={busy} aria-label="Limpiar conversación"><RotateCcw aria-hidden="true" /><span>Limpiar</span></button></div>
+          <div className="isabella-top-actions"><span className="isabella-model-badge"><span aria-hidden="true" /> Modelos abiertos · respaldo gratuito</span><button className="isabella-clear-button" type="button" onClick={clearConversation} disabled={busy} aria-label="Limpiar conversación"><RotateCcw aria-hidden="true" /><span>Limpiar</span></button></div>
         </div>
 
         <div className="isabella-message-list" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Mensajes de la conversación">

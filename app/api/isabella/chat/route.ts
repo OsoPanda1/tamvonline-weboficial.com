@@ -5,7 +5,8 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-const MODEL = 'google/gemini-3.8-flash'
+const MODEL_CATALOG_URL = 'https://ai-gateway.vercel.sh/v1/models'
+const MAX_FREE_MODELS = 12
 const MAX_MESSAGES = 20
 const MAX_MESSAGE_CHARS = 2_000
 const WINDOW_MS = 60_000
@@ -78,6 +79,33 @@ function lensInstruction(lens: string) {
   return instructions[lens] || instructions.general
 }
 
+type CatalogModel = {
+  id: string
+  type?: string
+  tags?: string[]
+  pricing?: { input?: string; output?: string; varies_by_provider?: boolean }
+}
+
+async function getFreeOpenModels(): Promise<string[]> {
+  const response = await fetch(MODEL_CATALOG_URL, {
+    cache: 'no-store',
+    signal: AbortSignal.timeout(5_000),
+  })
+  if (!response.ok) throw new Error('Model catalog unavailable')
+
+  const catalog = (await response.json()) as { data?: CatalogModel[] }
+  return (catalog.data || [])
+    .filter((model) =>
+      model.type === 'language' &&
+      model.tags?.includes('open-weights') &&
+      model.pricing?.input === '0' &&
+      model.pricing?.output === '0' &&
+      !model.pricing.varies_by_provider,
+    )
+    .slice(0, MAX_FREE_MODELS)
+    .map((model) => model.id)
+}
+
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return jsonError('Solicitud de origen no permitido.', 403)
   const limit = allowRequest(request)
@@ -96,27 +124,50 @@ export async function POST(request: Request) {
   if (!messages) return jsonError('La conversación no es válida o excede sus límites.', 400)
   const lens = typeof body.lens === 'string' && lenses.has(body.lens) ? body.lens : 'general'
 
+  let models: string[]
   try {
-    const result = await generateText({
-      model: gateway(MODEL),
-      system: [
-        'Eres Isabella Villaseñor AI, una asistente de TAMV Online Network. Responde en español salvo que la persona pida otro idioma. Sé clara, respetuosa y útil; distingue hechos, inferencias y dudas, y no inventes fuentes ni capacidades.',
-        'No afirmes que accediste a datos privados, repositorios, cuentas, memoria persistente ni herramientas. No emitas decisiones oficiales ni ejecutes acciones. En asuntos sensibles, explica límites y deriva las decisiones a revisión humana.',
-        `Enfoque de respuesta: ${lensInstruction(lens)}`,
-      ].join('\n\n'),
-      messages,
-      maxOutputTokens: 900,
-      temperature: 0.3,
-      abortSignal: AbortSignal.timeout(45_000),
-    })
-
-    if (!result.text.trim()) return jsonError('Isabella no recibió una respuesta utilizable del modelo.', 502)
-    return NextResponse.json({ answer: result.text.trim(), model: MODEL })
+    models = await getFreeOpenModels()
   } catch (error) {
-    if (error instanceof Error && /valid credit card|unlock your free credits/i.test(error.message)) {
-      return jsonError('El AI Gateway necesita facturación activa en el equipo de Vercel. Configura un método de pago y vuelve a intentarlo.', 503)
-    }
-    console.error('[Isabella] AI Gateway request failed:', error instanceof Error ? error.name : 'unknown')
-    return jsonError('Isabella no pudo conectarse al modelo en este momento. Inténtalo de nuevo.', 502)
+    console.error('[Isabella] Free model catalog unavailable:', error instanceof Error ? error.name : 'unknown')
+    return jsonError('No se pudo verificar qué modelos siguen siendo gratuitos. No se usó ningún modelo de pago; inténtalo de nuevo.', 503)
   }
+  if (models.length === 0) {
+    return jsonError('Por ahora no hay modelos abiertos gratuitos disponibles. No se usó ningún modelo de pago.', 503)
+  }
+
+  const generationDeadline = Date.now() + 48_000
+  let lastError: unknown
+  for (const model of models) {
+    const remainingMs = generationDeadline - Date.now()
+    if (remainingMs <= 1_000) break
+
+    try {
+      const result = await generateText({
+        model: gateway(model),
+        system: [
+          'Eres Isabella Villaseñor AI, una asistente de TAMV Online Network. Responde en español salvo que la persona pida otro idioma. Sé clara, respetuosa y útil; distingue hechos, inferencias y dudas, y no inventes fuentes ni capacidades.',
+          'No afirmes que accediste a datos privados, repositorios, cuentas, memoria persistente ni herramientas. No emitas decisiones oficiales ni ejecutes acciones. En asuntos sensibles, explica límites y deriva las decisiones a revisión humana.',
+          `Enfoque de respuesta: ${lensInstruction(lens)}`,
+        ].join('\n\n'),
+        messages,
+        maxOutputTokens: 900,
+        temperature: 0.3,
+        abortSignal: AbortSignal.timeout(Math.min(12_000, remainingMs)),
+      })
+
+      if (result.text.trim()) {
+        return NextResponse.json({ answer: result.text.trim(), model })
+      }
+      lastError = new Error('Empty model response')
+    } catch (error) {
+      lastError = error
+      console.warn('[Isabella] Free model unavailable; trying next:', model, error instanceof Error ? error.name : 'unknown')
+    }
+  }
+
+  if (lastError instanceof Error && /valid credit card|unlock your free credits/i.test(lastError.message)) {
+    return jsonError('El AI Gateway no habilita estos modelos gratuitos en el estado actual de la cuenta. No se recurrió a modelos de pago.', 503)
+  }
+  console.error('[Isabella] All free models failed:', lastError instanceof Error ? lastError.name : 'unknown')
+  return jsonError('Se agotaron los modelos gratuitos disponibles en este intento. No se usó ningún modelo de pago; inténtalo de nuevo más tarde.', 503)
 }
