@@ -18,6 +18,7 @@ const groups=[
   {href:'/roadmap',label:'Roadmap institucional'},
  ]},
  {label:'Plataforma',key:'platform',items:[
+  {href:'/isabella',label:'Isabella Villaseñor AI'},
   {href:'/hcu',label:'HCU Ω∞ · Mapa de transformación'},
   {href:'/resolver',label:'Resolver TAMV ID'},
   {href:'/recursos',label:'Centro de recursos'},
