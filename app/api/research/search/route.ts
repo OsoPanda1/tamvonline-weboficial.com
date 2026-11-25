@@ -15,6 +15,9 @@ type OsfResponse = { data?: Array<{ id?: string; attributes?: Record<string, unk
 type PubMedSearchResponse = { esearchresult?: { idlist?: string[] } };
 type PubMedSummaryResponse = { result?: { uids?: string[]; [key: string]: unknown } };
 
+// The two-stage NCBI query must fit inside the cross-app bridge budget.
+const NCBI_PROVIDER_TIMEOUT_MS = 3_500;
+
 function cap(value: unknown, max = 240): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
@@ -199,7 +202,7 @@ async function searchPubMed(q: string): Promise<{ items: ResearchItem[]; state: 
   if (process.env.TAMV_CONTACT_EMAIL) searchUrl.searchParams.set("email", process.env.TAMV_CONTACT_EMAIL);
   if (process.env.NCBI_API_KEY) searchUrl.searchParams.set("api_key", process.env.NCBI_API_KEY);
 
-  const found = await fetchJson<PubMedSearchResponse>(searchUrl.toString());
+  const found = await fetchJson<PubMedSearchResponse>(searchUrl.toString(), { signal: AbortSignal.timeout(NCBI_PROVIDER_TIMEOUT_MS) });
   if (!found.ok || !found.data) {
     return { items: [], state: { id: "pubmed", name: "PubMed / NCBI", status: "unavailable", count: 0, note: found.error } };
   }
@@ -214,7 +217,7 @@ async function searchPubMed(q: string): Promise<{ items: ResearchItem[]; state: 
   if (process.env.TAMV_CONTACT_EMAIL) summaryUrl.searchParams.set("email", process.env.TAMV_CONTACT_EMAIL);
   if (process.env.NCBI_API_KEY) summaryUrl.searchParams.set("api_key", process.env.NCBI_API_KEY);
 
-  const summary = await fetchJson<PubMedSummaryResponse>(summaryUrl.toString());
+  const summary = await fetchJson<PubMedSummaryResponse>(summaryUrl.toString(), { signal: AbortSignal.timeout(NCBI_PROVIDER_TIMEOUT_MS) });
   if (!summary.ok || !summary.data?.result) {
     return { items: [], state: { id: "pubmed", name: "PubMed / NCBI", status: "unavailable", count: 0, note: summary.error || "NCBI no devolvió el resumen bibliográfico." } };
   }
