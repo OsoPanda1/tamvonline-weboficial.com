@@ -6,6 +6,7 @@ type Props={active?:string};
 
 const groups=[
  {label:'Investigación',key:'research',items:[
+  {href:'/meta',label:'TAMV Meta · Lounge de conocimiento'},
   {href:'/investigacion',label:'Producción y registros'},
   {href:'/catalogo',label:'Catálogo de conocimiento'},
   {href:'/auditoria',label:'Auditoría de evidencia e IP'},
@@ -18,6 +19,7 @@ const groups=[
   {href:'/roadmap',label:'Roadmap institucional'},
  ]},
  {label:'Plataforma',key:'platform',items:[
+  {href:'/isabella',label:'Isabella Villaseñor AI'},
   {href:'/hcu',label:'HCU Ω∞ · Mapa de transformación'},
   {href:'/resolver',label:'Resolver TAMV ID'},
   {href:'/recursos',label:'Centro de recursos'},
